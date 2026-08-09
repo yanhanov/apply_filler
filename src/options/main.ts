@@ -32,7 +32,13 @@ import {
   parsePreferredSalary,
 } from '../shared/preferenceValues'
 import { extractTextFromFile } from './resumeImport'
-import { fileToStoredCv, formatCvSize } from '../shared/cvStorage'
+import {
+  clearStoredCv,
+  fileToStoredCv,
+  formatCvSize,
+  loadCvMeta,
+  saveStoredCv,
+} from '../shared/cvStorage'
 import type { CvFileMeta } from '../shared/cvTypes'
 
 const form = document.getElementById('profile-form') as HTMLFormElement
@@ -492,10 +498,8 @@ function renderCvChip(meta: CvFileMeta | null) {
 }
 
 async function loadCvChip() {
-  const res = await runtimeSendMessage<{ ok: boolean; meta: CvFileMeta | null }>({
-    type: 'GET_CV_META',
-  })
-  renderCvChip(res.meta ?? null)
+  const meta = await loadCvMeta()
+  renderCvChip(meta)
 }
 
 let storedProfile: CandidateProfile = { ...DEFAULT_PROFILE }
@@ -569,7 +573,7 @@ resumeInput.addEventListener('change', async () => {
   setImportStatus(`Reading ${file.name}…`)
   try {
     const storedCv = await fileToStoredCv(file)
-    await runtimeSendMessage({ type: 'SAVE_CV', cv: storedCv })
+    await saveStoredCv(storedCv)
     renderCvChip({
       name: storedCv.name,
       mimeType: storedCv.mimeType,
@@ -618,7 +622,7 @@ resumeInput.addEventListener('change', async () => {
 })
 
 clearCvBtn.addEventListener('click', async () => {
-  await runtimeSendMessage({ type: 'CLEAR_CV' })
+  await clearStoredCv()
   renderCvChip(null)
   setImportStatus('CV removed. Import again to auto-attach on Fill.')
 })

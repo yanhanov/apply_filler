@@ -311,7 +311,9 @@ async function fillResumeFileInputs(
   fileFields: ScannedFileField[],
 ): Promise<number> {
   const bytes = base64ToUint8Array(cvFile.dataBase64)
-  const blob = new Blob([bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)], {
+  const copy = new Uint8Array(bytes.byteLength)
+  copy.set(bytes)
+  const blob = new Blob([copy], {
     type: cvFile.mimeType || 'application/pdf',
   })
   const file = new File([blob], cvFile.name, {
