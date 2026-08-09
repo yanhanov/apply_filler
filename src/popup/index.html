@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apply Filler</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="top">
+        <div class="brand">
+          <span class="mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
+              <rect x="1" y="1" width="30" height="30" rx="8" fill="#eef2f7" />
+              <path
+                d="M10 8.5h9.2c.6 0 1.1.2 1.5.6l2.2 2.2c.4.4.6.9.6 1.5V23a1.5 1.5 0 0 1-1.5 1.5H10A1.5 1.5 0 0 1 8.5 23V10A1.5 1.5 0 0 1 10 8.5Z"
+                stroke="#0b1220"
+                stroke-width="1.7"
+                stroke-linejoin="round"
+              />
+              <path d="M19.2 8.7v2.8h2.8" stroke="#0b1220" stroke-width="1.7" stroke-linejoin="round" />
+              <path d="M11.5 14h7.5M11.5 17.2h6M11.5 20.4h4.5" stroke="#0b1220" stroke-width="1.5" stroke-linecap="round" />
+              <path
+                d="M17.2 21.2 19.4 23.4 24.2 17.8"
+                stroke="#155eef"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <div class="brand-text">
+            <strong class="logo">Apply Filler</strong>
+            <span class="tag">Local profile fill</span>
+          </div>
+        </div>
+        <a href="#" id="open-options" class="profile-link">Profile</a>
+      </header>
+
+      <p class="sub">Fill the open application form from your saved profile. CV attaches when saved in Options.</p>
+
+      <button type="button" id="fill-btn">
+        <span class="btn-label">Fill application</span>
+        <span class="btn-arrow" aria-hidden="true">→</span>
+      </button>
+
+      <div id="result" class="result" hidden>
+        <p id="status" class="status" role="status"></p>
+        <pre id="debug" class="debug" hidden></pre>
+      </div>
+    </div>
+    <script type="module" src="main.ts"></script>
+  </body>
+</html>

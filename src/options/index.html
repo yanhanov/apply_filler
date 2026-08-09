@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apply Filler — Profile</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <strong class="logo">Apply Filler</strong>
+      <span class="bar-note">Profile · local storage</span>
+    </header>
+
+    <main>
+      <form id="profile-form">
+        <section id="import">
+          <h2>Import</h2>
+          <p class="help">
+            PDF or DOCX — parses fields on-device and keeps the file to auto-attach as CV on Fill.
+          </p>
+          <label class="file">
+            <span>Choose resume / CV</span>
+            <input id="resume-file" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+          </label>
+          <div id="cv-chip" class="cv-chip" hidden>
+            <div class="cv-chip-text">
+              <strong id="cv-name">—</strong>
+              <span id="cv-meta" class="cv-meta"></span>
+            </div>
+            <button type="button" class="ghost" id="clear-cv">Remove CV</button>
+          </div>
+          <p id="import-status" class="status" role="status"></p>
+        </section>
+
+        <section id="contact">
+          <h2>Contact</h2>
+          <div class="grid">
+            <label>Full name <input id="fullName" name="fullName" /></label>
+            <label>Email <input id="email" name="email" type="email" /></label>
+            <label>Phone <input id="phone" name="phone" type="tel" /></label>
+            <label>Country <input id="country" name="country" placeholder="Turkmenistan" /></label>
+            <label>City <input id="city" name="city" placeholder="Ashgabat" /></label>
+            <label>Location <input id="location" name="location" placeholder="City, Country" /></label>
+          </div>
+        </section>
+
+        <section id="links">
+          <h2>Links</h2>
+          <div class="grid">
+            <label>LinkedIn <input id="linkedin" name="linkedin" type="url" /></label>
+            <label>GitHub <input id="github" name="github" type="url" /></label>
+            <label>Portfolio <input id="portfolio" name="portfolio" type="url" /></label>
+            <label>Twitter / X <input id="twitter" name="twitter" type="url" /></label>
+            <label>Telegram <input id="telegram" name="telegram" /></label>
+          </div>
+        </section>
+
+        <section id="role">
+          <h2>Role</h2>
+          <div class="grid">
+            <label>Current title <input id="currentTitle" name="currentTitle" /></label>
+            <label>Current company <input id="currentCompany" name="currentCompany" /></label>
+            <label>Years of experience <input id="yearsExperience" name="yearsExperience" /></label>
+            <label>
+              Cover letter tone
+              <select id="coverLetterTone" name="coverLetterTone">
+                <option value="professional">Professional</option>
+                <option value="short">Short</option>
+                <option value="enthusiastic">Enthusiastic</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section id="prefs">
+          <h2>Preferences</h2>
+          <p class="help">
+            Pick standard ATS answers — Fill matches common dropdown labels (Remote / Fully remote, Yes / I do, …).
+          </p>
+          <div class="grid">
+            <label class="salary-field">
+              Salary expectation
+              <div class="salary-row">
+                <select id="salaryCurrency" name="salaryCurrency" aria-label="Currency">
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="RUB">RUB (₽)</option>
+                  <option value="TMT">TMT</option>
+                  <option value="KZT">KZT (₸)</option>
+                  <option value="UAH">UAH (₴)</option>
+                  <option value="PLN">PLN (zł)</option>
+                  <option value="TRY">TRY (₺)</option>
+                  <option value="CAD">CAD (C$)</option>
+                  <option value="AUD">AUD (A$)</option>
+                  <option value="CHF">CHF</option>
+                  <option value="JPY">JPY (¥)</option>
+                  <option value="INR">INR (₹)</option>
+                </select>
+                <input
+                  id="salaryAmount"
+                  name="salaryAmount"
+                  list="salary-suggestions"
+                  inputmode="decimal"
+                  placeholder="3000"
+                  autocomplete="off"
+                />
+                <select id="salaryPeriod" name="salaryPeriod" aria-label="Period">
+                  <option value="month">/ month</option>
+                  <option value="year">/ year</option>
+                  <option value="hour">/ hour</option>
+                  <option value="day">/ day</option>
+                </select>
+              </div>
+              <datalist id="salary-suggestions">
+                <option value="Negotiable"></option>
+                <option value="Market rate"></option>
+                <option value="Open to discuss"></option>
+              </datalist>
+              <span id="salary-preview" class="field-hint"></span>
+            </label>
+            <label>
+              Notice period
+              <select id="noticePeriod" name="noticePeriod">
+                <option value="">—</option>
+                <option value="Immediately">Immediately</option>
+                <option value="Less than 2 weeks">Less than 2 weeks</option>
+                <option value="2 weeks">2 weeks</option>
+                <option value="1 month">1 month</option>
+                <option value="2 months">2 months</option>
+                <option value="3 months">3 months</option>
+                <option value="3 months or more">3 months or more</option>
+              </select>
+            </label>
+            <label>
+              Work arrangement
+              <select id="workArrangement" name="workArrangement">
+                <option value="">—</option>
+                <option value="Remote">Remote</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="On-site">On-site</option>
+                <option value="Flexible / No preference">Flexible / No preference</option>
+              </select>
+            </label>
+            <label>
+              Employment type
+              <select id="employmentType" name="employmentType">
+                <option value="">—</option>
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Contract">Contract</option>
+                <option value="Freelance">Freelance</option>
+                <option value="Internship">Internship</option>
+              </select>
+            </label>
+            <label>
+              Availability
+              <select id="availability" name="availability">
+                <option value="">—</option>
+                <option value="Immediately">Immediately</option>
+                <option value="In 2 weeks">In 2 weeks</option>
+                <option value="In 1 month">In 1 month</option>
+                <option value="In 2 months">In 2 months</option>
+                <option value="In 3 months">In 3 months</option>
+              </select>
+            </label>
+            <label>
+              Timezone
+              <input
+                id="timezone"
+                name="timezone"
+                list="timezone-suggestions"
+                placeholder="e.g. UTC+5"
+              />
+              <datalist id="timezone-suggestions">
+                <option value="UTC+0 / GMT"></option>
+                <option value="UTC+1 / CET"></option>
+                <option value="UTC+2 / EET"></option>
+                <option value="UTC+3 / MSK"></option>
+                <option value="UTC+4"></option>
+                <option value="UTC+5"></option>
+                <option value="Flexible / any timezone with overlap"></option>
+                <option value="US East (ET)"></option>
+                <option value="US West (PT)"></option>
+              </datalist>
+            </label>
+            <label>
+              Remote experience
+              <select id="remoteExperience" name="remoteExperience">
+                <option value="">—</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="Less than 1 year">Less than 1 year</option>
+                <option value="1–2 years">1–2 years</option>
+                <option value="3+ years">3+ years</option>
+              </select>
+            </label>
+            <label>
+              Work authorization
+              <select id="workAuthorization" name="workAuthorization">
+                <option value="">—</option>
+                <option value="Authorized to work">Authorized to work</option>
+                <option value="No sponsorship required">No sponsorship required</option>
+                <option value="Citizen / permanent resident">Citizen / permanent resident</option>
+                <option value="Need visa sponsorship">Need visa sponsorship</option>
+                <option value="Open to relocation with sponsorship">Open to relocation with sponsorship</option>
+              </select>
+            </label>
+            <label>
+              Willing to relocate
+              <select id="willingToRelocate" name="willingToRelocate">
+                <option value="">—</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </label>
+            <label>
+              Self-employed
+              <select id="selfEmployed" name="selfEmployed">
+                <option value="">—</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </label>
+            <label>
+              Home office
+              <select id="homeOffice" name="homeOffice">
+                <option value="">—</option>
+                <option value="Yes">Yes</option>
+                <option value="Yes — dedicated workspace">Yes — dedicated workspace</option>
+                <option value="Yes — quiet home setup">Yes — quiet home setup</option>
+                <option value="No">No</option>
+              </select>
+            </label>
+            <label>
+              Async / distributed
+              <select id="asyncExperience" name="asyncExperience">
+                <option value="">—</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </label>
+            <label>
+              How did you hear
+              <select id="referralSource" name="referralSource">
+                <option value="">—</option>
+                <option value="LinkedIn">LinkedIn</option>
+                <option value="Company website">Company website</option>
+                <option value="Job board">Job board</option>
+                <option value="Recruiter">Recruiter</option>
+                <option value="Employee referral">Employee referral</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section id="skills-section">
+          <h2>Skills</h2>
+          <p class="help">Type a skill and press Enter or comma.</p>
+          <div class="tags" id="skills-tags"></div>
+          <input
+            id="skills-input"
+            class="tag-input"
+            type="text"
+            placeholder="React, TypeScript, Node…"
+            autocomplete="off"
+          />
+        </section>
+
+        <section id="languages-section">
+          <h2>Languages</h2>
+          <p class="help">Language + level for ATS language fields.</p>
+          <div id="languages-list" class="rows"></div>
+          <button type="button" class="ghost" id="add-language">Add language</button>
+        </section>
+
+        <section id="education-section">
+          <h2>Education</h2>
+          <div id="education-list" class="rows"></div>
+          <button type="button" class="ghost" id="add-education">Add education</button>
+        </section>
+
+        <section id="experience-section">
+          <h2>Work experience</h2>
+          <p class="help">One role per card. Used for experience / summary fields.</p>
+          <div id="experience-list" class="cards"></div>
+          <button type="button" class="ghost" id="add-experience">Add role</button>
+        </section>
+
+        <section id="bio-section">
+          <h2>Bio</h2>
+          <p class="help">Short summary for cover letter / about fields.</p>
+          <label class="stack visually-hidden" for="bio">Bio</label>
+          <textarea id="bio" name="bio" rows="5" placeholder="A few sentences about you…"></textarea>
+        </section>
+
+        <div class="footer">
+          <button type="submit">Save profile</button>
+          <p id="save-status" class="status" role="status"></p>
+        </div>
+      </form>
+    </main>
+    <script type="module" src="main.ts"></script>
+  </body>
+</html>
