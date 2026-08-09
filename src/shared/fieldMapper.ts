@@ -1,4 +1,5 @@
 import type { CandidateProfile, FieldIntent, ScannedField } from './types'
+import { formatPreferredSalary, parsePreferredSalary } from './preferenceValues'
 
 type Rule = {
   intent: FieldIntent
@@ -30,13 +31,19 @@ const RULES: Rule[] = [
   {
     intent: 'salary',
     patterns: [
-      /salary/i,
-      /compensation/i,
-      /expected\s*pay/i,
+      /salary\s*expect/i,
+      /expect(ed)?\s*(salary|compensation|pay|ctc|rate)/i,
+      /desired\s*(salary|compensation|pay|ctc)/i,
+      /preferred\s*salary/i,
+      /compensation\s*expect/i,
       /pay\s*expect/i,
-      /desired\s*salary/i,
+      /expected\s*pay/i,
+      /\bsalary\b/i,
+      /\bcompensation\b/i,
+      /\bctc\b/i,
       /зарплат/i,
       /оклад/i,
+      /ожидаем(ая|ый)?\s*зарплат/i,
     ],
   },
   {
@@ -96,6 +103,15 @@ const RULES: Rule[] = [
     patterns: [/self[\s-]?employed/i, /freelancer/i, /own\s*company/i, /registered\s*as/i],
   },
   {
+    intent: 'tax_residency_match',
+    patterns: [
+      /tax\s*residenc.*match/i,
+      /match.*tax\s*residenc/i,
+      /tax\s*residenc(y|e)?\s*(same|equal|match)/i,
+      /does\s*your\s*tax\s*residenc/i,
+    ],
+  },
+  {
     intent: 'work_authorization',
     patterns: [
       /work\s*authori[sz]/i,
@@ -103,7 +119,7 @@ const RULES: Rule[] = [
       /eligible\s*to\s*work/i,
       /right\s*to\s*work/i,
       /sponsorship/i,
-      /tax\s*residenc/i,
+      /require\s*(a\s*)?visa/i,
     ],
   },
   {
@@ -248,9 +264,85 @@ function countryFromProfile(profile: CandidateProfile): string {
   return loc.split(',').slice(1).join(',').trim()
 }
 
+function salaryParts(profile: CandidateProfile): {
+  amount: string
+  currency: string
+  period: string
+  formatted: string
+} {
+  let amount = profile.salaryAmount.trim()
+  let currency = (profile.salaryCurrency || 'USD').trim() || 'USD'
+  let period = (profile.salaryPeriod || 'month').trim() || 'month'
+
+  if (!amount && profile.preferredSalary.trim()) {
+    const parsed = parsePreferredSalary(profile.preferredSalary)
+    amount = parsed.salaryAmount
+    currency = parsed.salaryCurrency || currency
+    period = parsed.salaryPeriod || period
+  }
+
+  const formatted =
+    profile.preferredSalary.trim() ||
+    formatPreferredSalary({
+      salaryAmount: amount,
+      salaryCurrency: currency,
+      salaryPeriod: period,
+    })
+
+  return { amount, currency, period, formatted }
+}
+
+function salaryValueForField(
+  profile: CandidateProfile,
+  field?: Pick<ScannedField, 'type' | 'tagName' | 'label' | 'placeholder' | 'name' | 'ariaLabel'>,
+): string | null {
+  const { amount, currency, period, formatted } = salaryParts(profile)
+  if (!amount && !formatted) return null
+
+  const hint = [
+    field?.label,
+    field?.placeholder,
+    field?.name,
+    field?.ariaLabel,
+    field?.type,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  if (/currenc|валют/i.test(hint) && !/amount|expect|salary|compensation/i.test(hint.replace(/currenc\w*/g, ''))) {
+    return currency
+  }
+
+  const numericOnly =
+    field?.type === 'number' ||
+    field?.type === 'range' ||
+    /amount|numeric|number|сколько|сумм/i.test(hint)
+
+  const digits = (amount || formatted).replace(/[^\d.]/g, '')
+  if (numericOnly) return digits || null
+
+  // Plain text "Salary expectation" fields: prefer compact ATS-friendly value
+  if (/salary|expect|compensation|ctc|pay/i.test(hint)) {
+    if (/negotiable|market|open to discuss/i.test(amount || formatted)) {
+      return amount || formatted
+    }
+    if (digits) {
+      // e.g. "3000 USD/month" — works in most text salary fields
+      return `${digits} ${currency}/${period}`
+    }
+  }
+
+  return formatted || amount || null
+}
+
 export function valueFromProfile(
   intent: FieldIntent,
   profile: CandidateProfile,
+  field?: Pick<
+    ScannedField,
+    'type' | 'tagName' | 'label' | 'placeholder' | 'name' | 'ariaLabel'
+  >,
 ): string | null {
   const { first, last } = splitName(profile.fullName)
 
@@ -296,7 +388,7 @@ export function valueFromProfile(
     case 'languages':
       return profile.languages || null
     case 'salary':
-      return profile.preferredSalary || null
+      return salaryValueForField(profile, field)
     case 'notice_period':
       return profile.noticePeriod || null
     case 'work_arrangement':
@@ -311,6 +403,8 @@ export function valueFromProfile(
       return profile.remoteExperience || null
     case 'work_authorization':
       return profile.workAuthorization || null
+    case 'tax_residency_match':
+      return profile.taxResidencyMatches || 'Yes'
     case 'willing_to_relocate':
       return profile.willingToRelocate || null
     case 'self_employed':
@@ -344,7 +438,7 @@ export function mapFieldsWithProfile(
       continue
     }
 
-    const value = valueFromProfile(field.intent, profile)
+    const value = valueFromProfile(field.intent, profile, field)
     if (value) {
       answered.push({ id: field.id, value })
       continue

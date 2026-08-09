@@ -75,6 +75,12 @@ fillBtn.addEventListener('click', async () => {
     } else if (result.fileUploadHint) {
       parts.push('attach CV manually if needed')
     }
+
+    const unmatchedSalary = result.debug?.unmatched?.some((u) => u.intent === 'salary')
+    if (unmatchedSalary) {
+      parts.push('set Salary in Profile to fill salary field')
+    }
+
     setStatus(`${parts.join(' · ')}.`, 'ok')
   } catch (err) {
     setStatus(err instanceof Error ? err.message : 'Unexpected error', 'error')

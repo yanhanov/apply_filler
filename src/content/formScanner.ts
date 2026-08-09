@@ -70,16 +70,57 @@ function stableId(el: HTMLElement, index: number, prefix = ''): string {
 }
 
 function classifyFileField(hint: string): FileUploadKind {
-  const h = hint.toLowerCase()
-  if (/cover\s*letter|motivation|сопровод|мотивац|letter\s*of\s*interest/i.test(h)) {
+  const h = hint.toLowerCase().replace(/[_-]+/g, ' ')
+
+  // Cover letter first — never treat these as CV
+  if (
+    /cover\s*letter|coverletter|motivation\s*letter|letter\s*of\s*interest|сопровод|мотивац|covering\s*letter/i.test(
+      h,
+    )
+  ) {
     return 'cover_letter'
   }
+  // name/id shortcuts common in ATS
+  if (/\b(cover|motivation|covering)(\s|$)/i.test(h) && /file|upload|attach|document|pdf/i.test(h)) {
+    return 'cover_letter'
+  }
+
   if (
-    /\bcv\b|resume|curriculum|résumé|rezume|резюме|lebenslauf|attach.*(cv|resume)/i.test(h)
+    /\bcv\b|\bresume\b|curriculum|résumé|rezume|резюме|lebenslauf|resume\s*file|cv\s*file|upload\s*(your\s*)?(cv|resume)/i.test(
+      h,
+    )
   ) {
     return 'resume'
   }
+
   return 'unknown'
+}
+
+/** Nearby dropzone / heading text helps when the file input itself is unlabeled. */
+function fileFieldContext(el: HTMLInputElement): string {
+  const chunks: string[] = []
+  const label = labelFor(el)
+  if (label) chunks.push(label)
+
+  const group = el.closest(
+    'label, div, fieldset, section, li, [class*="upload"], [class*="drop"], [class*="file"]',
+  )
+  if (group) {
+    const clone = group.cloneNode(true) as HTMLElement
+    clone.querySelectorAll('input, textarea, select, button, svg').forEach((n) => n.remove())
+    const text = (clone.textContent ?? '').replace(/\s+/g, ' ').trim()
+    if (text) chunks.push(text.slice(0, 240))
+  }
+
+  // Previous sibling heading/label
+  let prev = el.previousElementSibling
+  for (let i = 0; i < 3 && prev; i += 1) {
+    const t = (prev.textContent ?? '').replace(/\s+/g, ' ').trim()
+    if (t) chunks.push(t.slice(0, 120))
+    prev = prev.previousElementSibling
+  }
+
+  return chunks.join(' ')
 }
 
 function pushField(
@@ -189,13 +230,14 @@ export function scanFormFields(): {
       const label = labelFor(el)
       const ariaLabel = el.getAttribute('aria-label') ?? ''
       const accept = el.getAttribute('accept') ?? ''
-      const hint = [label, name, ariaLabel, accept, el.id].join(' ')
+      const context = fileFieldContext(el)
+      const hint = [label, name, ariaLabel, accept, el.id, context].join(' ')
       const id = stableId(el, fileIndex, 'file:')
       el.dataset.applyFillerId = id
       fileFields.push({
         id,
         name,
-        label: label || ariaLabel || name || 'File upload',
+        label: label || ariaLabel || name || context.slice(0, 80) || 'File upload',
         accept,
         kind: classifyFileField(hint),
       })
@@ -221,6 +263,7 @@ export function scanFormFields(): {
     index += 1
   })
 
+  // Single unlabeled file slot → treat as resume. Never guess across multiple unknowns.
   if (fileFields.length === 1 && fileFields[0].kind === 'unknown') {
     fileFields[0].kind = 'resume'
   }

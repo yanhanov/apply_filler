@@ -270,7 +270,15 @@ export async function fillFields(
 
       if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
         el.focus()
-        setNativeValue(el, answer.value)
+        let value = answer.value
+        if (el instanceof HTMLInputElement && el.type === 'number') {
+          value = value.replace(/[^\d.]/g, '')
+        }
+        if (!value) {
+          skipped += 1
+          continue
+        }
+        setNativeValue(el, value)
         dispatchInputEvents(el)
         filled += 1
         continue
@@ -321,15 +329,36 @@ async function fillResumeFileInputs(
     lastModified: Date.now(),
   })
 
-  const targets =
-    fileFields.filter((f) => f.kind === 'resume').length > 0
-      ? fileFields.filter((f) => f.kind === 'resume')
-      : fileFields.filter((f) => f.kind !== 'cover_letter')
+  // Strict: only explicit resume slots. Fallback only when a single non-cover field exists.
+  const resumes = fileFields.filter((f) => f.kind === 'resume')
+  const coverLetters = fileFields.filter((f) => f.kind === 'cover_letter')
+  let targets = resumes
+  if (targets.length === 0) {
+    const nonCover = fileFields.filter((f) => f.kind !== 'cover_letter')
+    if (nonCover.length === 1 && coverLetters.length >= 0) {
+      targets = nonCover
+    }
+  }
 
   let attached = 0
   for (const field of targets) {
+    if (field.kind === 'cover_letter') continue
     const el = findByFieldId(field.id)
     if (!(el instanceof HTMLInputElement) || el.type !== 'file') continue
+    // Re-check live DOM labels in case scan missed cover-letter wording
+    const liveHint = [
+      field.label,
+      field.name,
+      el.getAttribute('name'),
+      el.getAttribute('aria-label'),
+      el.id,
+      el.closest('label')?.textContent,
+    ]
+      .filter(Boolean)
+      .join(' ')
+    if (/cover\s*letter|coverletter|motivation\s*letter|сопровод|мотивац/i.test(liveHint)) {
+      continue
+    }
     if (!acceptsFile(el, file.type, file.name)) continue
     try {
       const dt = new DataTransfer()

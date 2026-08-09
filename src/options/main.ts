@@ -82,6 +82,7 @@ const scalarFields: Array<keyof CandidateProfile> = [
   'timezone',
   'remoteExperience',
   'workAuthorization',
+  'taxResidencyMatches',
   'willingToRelocate',
   'selfEmployed',
   'homeOffice',
@@ -423,6 +424,10 @@ function writeScalars(profile: CandidateProfile) {
     workAuthorization: canonicalizePreference(
       WORK_AUTHORIZATION_OPTIONS,
       profile.workAuthorization,
+    ),
+    taxResidencyMatches: canonicalizePreference(
+      YES_NO_OPTIONS,
+      profile.taxResidencyMatches || 'Yes',
     ),
     willingToRelocate: canonicalizePreference(YES_NO_OPTIONS, profile.willingToRelocate),
     selfEmployed: canonicalizePreference(YES_NO_OPTIONS, profile.selfEmployed),

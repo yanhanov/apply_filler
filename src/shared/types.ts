@@ -29,6 +29,7 @@ export type FieldIntent =
   | 'timezone'
   | 'remote_experience'
   | 'work_authorization'
+  | 'tax_residency_match'
   | 'willing_to_relocate'
   | 'self_employed'
   | 'home_office'
@@ -95,6 +96,7 @@ export interface CandidateProfile {
   timezone: string
   remoteExperience: string
   workAuthorization: string
+  taxResidencyMatches: string
   willingToRelocate: string
   selfEmployed: string
   homeOffice: string
@@ -139,6 +141,7 @@ export const DEFAULT_PROFILE: CandidateProfile = {
   timezone: '',
   remoteExperience: '',
   workAuthorization: '',
+  taxResidencyMatches: 'Yes',
   willingToRelocate: '',
   selfEmployed: '',
   homeOffice: '',
