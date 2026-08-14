@@ -190,6 +190,8 @@ export interface FillResponse {
   coverLetter: string
   fileUploadHint: boolean
   cvAttached?: boolean
+  /** Soft notice (e.g. LLM skipped / degraded) — fill may still succeed. */
+  warning?: string
   error?: string
   debug?: {
     scanned: number
@@ -197,6 +199,7 @@ export interface FillResponse {
     filled: number
     skipped: number
     filesFilled?: number
+    usedLlm?: boolean
     unmatched: Array<{ id: string; intent: string; label: string }>
   }
 }

@@ -100,7 +100,8 @@ label.stack {
   margin-top: 12px;
 }
 
-.salary-field {
+.salary-field,
+.span-2 {
   grid-column: 1 / -1;
 }
 

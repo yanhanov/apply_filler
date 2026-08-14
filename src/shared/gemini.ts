@@ -42,6 +42,7 @@ export async function generateWithGemini(params: {
     throw new Error('Add your free Gemini API key in Options.')
   }
 
+  const allowedIds = new Set(fields.map((f) => f.id))
   const prompt = buildFillPrompt({ profile, vacancy, fields })
   const url = `${GEMINI_URL}?key=${encodeURIComponent(apiKey.trim())}`
 
@@ -74,7 +75,8 @@ export async function generateWithGemini(params: {
     throw new Error(data.error.message)
   }
 
-  const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? ''
+  const text =
+    data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? ''
   if (!text) {
     throw new Error('Empty response from Gemini')
   }
@@ -91,18 +93,20 @@ export async function generateWithGemini(params: {
   if (Array.isArray(parsed.answers)) {
     for (const item of parsed.answers) {
       if (
-        item &&
-        typeof item === 'object' &&
-        'id' in item &&
-        'value' in item &&
-        typeof (item as FieldAnswer).id === 'string' &&
-        typeof (item as FieldAnswer).value === 'string'
+        !item ||
+        typeof item !== 'object' ||
+        !('id' in item) ||
+        !('value' in item)
       ) {
-        answers.push({
-          id: (item as FieldAnswer).id,
-          value: (item as FieldAnswer).value,
-        })
+        continue
       }
+      const id = (item as FieldAnswer).id
+      const value = (item as FieldAnswer).value
+      if (typeof id !== 'string' || typeof value !== 'string') continue
+      if (!allowedIds.has(id)) continue
+      const trimmed = value.trim()
+      if (!trimmed) continue
+      answers.push({ id, value: trimmed })
     }
   }
 

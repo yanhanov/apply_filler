@@ -1,5 +1,9 @@
 import type { CandidateProfile, ScannedField, VacancyInfo } from './types'
 
+function fieldLabel(f: ScannedField, index: number): string {
+  return f.label || f.placeholder || f.ariaLabel || f.name || f.id || `field_${index}`
+}
+
 export function buildFillPrompt(params: {
   profile: CandidateProfile
   vacancy: VacancyInfo
@@ -11,30 +15,55 @@ export function buildFillPrompt(params: {
     `Full name: ${profile.fullName}`,
     `Email: ${profile.email}`,
     `Phone: ${profile.phone}`,
+    `Country: ${profile.country}`,
+    `City: ${profile.city}`,
     `Location: ${profile.location}`,
     `LinkedIn: ${profile.linkedin}`,
     `GitHub: ${profile.github}`,
     `Portfolio: ${profile.portfolio}`,
+    `Twitter: ${profile.twitter}`,
+    `Telegram: ${profile.telegram}`,
     `Current title: ${profile.currentTitle}`,
+    `Current company: ${profile.currentCompany}`,
     `Years of experience: ${profile.yearsExperience}`,
     `Skills: ${profile.skills}`,
+    `Languages: ${profile.languages}`,
+    `Education:\n${profile.education}`,
     `Work experience:\n${profile.workExperience}`,
     `Bio / achievements: ${profile.bio}`,
     `Preferred salary: ${profile.preferredSalary || 'not specified'}`,
+    `Notice period: ${profile.noticePeriod}`,
+    `Work arrangement: ${profile.workArrangement}`,
+    `Employment type: ${profile.employmentType}`,
+    `Availability: ${profile.availability}`,
+    `Timezone: ${profile.timezone}`,
+    `Remote experience: ${profile.remoteExperience}`,
+    `Work authorization: ${profile.workAuthorization}`,
+    `Tax residency matches employer: ${profile.taxResidencyMatches}`,
+    `Willing to relocate: ${profile.willingToRelocate}`,
+    `Self-employed: ${profile.selfEmployed}`,
+    `Home office: ${profile.homeOffice}`,
+    `Async / distributed experience: ${profile.asyncExperience}`,
+    `Referral source: ${profile.referralSource}`,
     `Cover letter tone: ${profile.coverLetterTone}`,
   ].join('\n')
 
   const fieldsBlock = fields
     .map((f, i) => {
-      const label =
-        f.label || f.placeholder || f.ariaLabel || f.name || f.id || `field_${i}`
       const opts =
         f.options.length > 0 ? ` | options: ${f.options.join(' | ')}` : ''
-      return `- id: ${f.id} | type: ${f.tagName}/${f.type || 'text'} | intent: ${f.intent} | label: ${label}${opts}`
+      return `- id: ${f.id} | type: ${f.tagName}/${f.type || 'text'} | intent: ${f.intent} | label: ${fieldLabel(f, i)}${opts}`
     })
     .join('\n')
 
-  return `You help fill a job application form.
+  const toneRule =
+    profile.coverLetterTone === 'short'
+      ? 'Keep cover letter under 120 words.'
+      : profile.coverLetterTone === 'enthusiastic'
+        ? 'Keep cover letter 150-220 words, warm and energetic but still professional.'
+        : 'Keep cover letter 150-280 words, clear and professional.'
+
+  return `You help fill open / free-text job application fields.
 
 Return ONLY valid JSON (no markdown fences) with this shape:
 {
@@ -45,12 +74,14 @@ Return ONLY valid JSON (no markdown fences) with this shape:
 Rules:
 - Write the cover letter in the language of the vacancy (detect from vacancy text).
 - Tone for cover letter: ${profile.coverLetterTone}.
-- Keep cover letter concise (150-280 words unless tone is "short", then under 120 words).
-- Base answers ONLY on the candidate profile and vacancy. Do not invent employers or degrees not present in the bio.
-- For select/radio fields, pick the closest matching option text from the provided options.
-- For yes/no or boolean-like questions, answer briefly and honestly based on the profile.
-- Include an answer for EVERY listed field id.
-- If a field is clearly a cover letter / motivation letter, put the same coverLetter text as its value.
+- ${toneRule}
+- Tailor the cover letter to THIS vacancy using the candidate profile. Do not invent employers, degrees, skills, or achievements not present in the profile.
+- Base every answer ONLY on the candidate profile and vacancy.
+- For select/radio fields, pick the closest matching option text from the provided options (use the option wording exactly when possible).
+- For yes/no questions, answer briefly and honestly from the profile.
+- Include an answer for EVERY listed field id. Do not invent extra ids.
+- If a field intent is cover_letter (or the label is a cover/motivation letter), set its value to the same text as coverLetter.
+- Leave value empty only if the profile truly has no basis to answer.
 
 CANDIDATE PROFILE:
 ${profileBlock}

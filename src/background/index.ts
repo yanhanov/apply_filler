@@ -1,4 +1,5 @@
 import { mapFieldsWithProfile } from '../shared/fieldMapper'
+import { generateWithGemini } from '../shared/gemini'
 import { tabsSendMessage } from '../shared/messaging'
 import { loadProfile, saveProfile } from '../shared/storage'
 import {
@@ -12,6 +13,7 @@ import type {
   CandidateProfile,
   FieldAnswer,
   FillResponse,
+  ScannedField,
   ScanPageResult,
 } from '../shared/types'
 
@@ -62,7 +64,48 @@ function fieldLabel(f: {
   return f.label || f.placeholder || f.ariaLabel || f.name || f.id
 }
 
-/** Local-only fill (no AI) — for debugging field mapping. */
+function mergeAnswers(params: {
+  local: FieldAnswer[]
+  llm: FieldAnswer[]
+  fields: ScannedField[]
+  coverLetter: string
+}): FieldAnswer[] {
+  const { local, llm, fields, coverLetter } = params
+  const byId = new Map<string, string>()
+
+  for (const a of local) {
+    if (a.value.trim()) byId.set(a.id, a.value)
+  }
+
+  const llmIds = new Set(fields.filter((f) => f.needsLlm).map((f) => f.id))
+  for (const a of llm) {
+    if (!llmIds.has(a.id)) continue
+    if (!a.value.trim()) continue
+    // Local profile values win except cover_letter (LLM is vacancy-aware).
+    const intent = fields.find((f) => f.id === a.id)?.intent
+    if (intent === 'cover_letter' || !byId.has(a.id)) {
+      byId.set(a.id, a.value)
+    }
+  }
+
+  if (coverLetter.trim()) {
+    for (const f of fields) {
+      if (f.intent === 'cover_letter') byId.set(f.id, coverLetter)
+    }
+  }
+
+  return [...byId.entries()].map(([id, value]) => ({ id, value }))
+}
+
+function unmatchedAfter(
+  fields: ScannedField[],
+  answers: FieldAnswer[],
+): ScannedField[] {
+  const filled = new Set(answers.map((a) => a.id))
+  return fields.filter((f) => !filled.has(f.id))
+}
+
+/** Hybrid fill: local profile matching + Gemini for cover letter / open questions. */
 async function runFill(): Promise<FillResponse> {
   const profile = await loadProfile()
   if (!profile.fullName.trim() && !profile.email.trim()) {
@@ -92,7 +135,7 @@ async function runFill(): Promise<FillResponse> {
     }
   }
 
-  const { fields, fileUploadCount, fileFields } = scan.result
+  const { vacancy, fields, fileUploadCount, fileFields } = scan.result
   const storedCv = await loadStoredCv()
   const hasCv = Boolean(storedCv)
 
@@ -118,9 +161,52 @@ async function runFill(): Promise<FillResponse> {
     }
   }
 
-  const { answered, unmatched } = mapFieldsWithProfile(fields, profile)
-  const answers: FieldAnswer[] = answered
-  const coverLetter = profile.bio || ''
+  const { answered: localAnswers } = mapFieldsWithProfile(fields, profile)
+  const llmFields = fields.filter((f) => f.needsLlm)
+  const hasApiKey = Boolean(profile.geminiApiKey.trim())
+
+  let coverLetter = profile.bio.trim()
+  let llmAnswers: FieldAnswer[] = []
+  let usedLlm = false
+  let warning: string | undefined
+
+  if (llmFields.length > 0 && hasApiKey) {
+    try {
+      const llm = await generateWithGemini({
+        apiKey: profile.geminiApiKey,
+        profile,
+        vacancy,
+        fields: llmFields,
+      })
+      usedLlm = true
+      llmAnswers = llm.answers
+      if (llm.coverLetter.trim()) coverLetter = llm.coverLetter.trim()
+    } catch (err) {
+      warning =
+        err instanceof Error
+          ? `${err.message} Filled profile fields only.`
+          : 'Gemini failed. Filled profile fields only.'
+      if (!coverLetter) {
+        const localCover = localAnswers.find((a) => {
+          const f = fields.find((x) => x.id === a.id)
+          return f?.intent === 'cover_letter'
+        })
+        coverLetter = localCover?.value ?? ''
+      }
+    }
+  } else if (llmFields.length > 0 && !hasApiKey) {
+    warning =
+      'Add a Gemini API key in Options to draft cover letters and open questions.'
+  }
+
+  const answers = mergeAnswers({
+    local: localAnswers,
+    llm: llmAnswers,
+    fields,
+    coverLetter,
+  })
+
+  const leftover = unmatchedAfter(fields, answers)
 
   if (answers.length === 0 && !(hasCv && fileFields.length > 0)) {
     return {
@@ -128,13 +214,18 @@ async function runFill(): Promise<FillResponse> {
       answers: [],
       coverLetter,
       fileUploadHint: fileUploadCount > 0,
-      error: `Scanned ${fields.length} fields, matched 0 to profile.`,
+      warning,
+      error:
+        llmFields.length > 0 && !hasApiKey
+          ? 'No profile fields matched. Add a Gemini API key in Options for open questions / cover letter.'
+          : `Scanned ${fields.length} fields, matched 0 to profile.`,
       debug: {
         scanned: fields.length,
         matched: 0,
         filled: 0,
         skipped: 0,
-        unmatched: unmatched.slice(0, 20).map((f) => ({
+        usedLlm,
+        unmatched: leftover.slice(0, 20).map((f) => ({
           id: f.id,
           intent: f.intent,
           label: fieldLabel(f),
@@ -161,6 +252,7 @@ async function runFill(): Promise<FillResponse> {
       answers,
       coverLetter,
       fileUploadHint: fileUploadCount > 0 && (fill.result?.filesFilled ?? 0) === 0,
+      warning,
       error: fill.error || 'Failed to fill fields on the page.',
       debug: {
         scanned: fields.length,
@@ -168,7 +260,8 @@ async function runFill(): Promise<FillResponse> {
         filled: 0,
         skipped: 0,
         filesFilled: 0,
-        unmatched: unmatched.slice(0, 20).map((f) => ({
+        usedLlm,
+        unmatched: leftover.slice(0, 20).map((f) => ({
           id: f.id,
           intent: f.intent,
           label: fieldLabel(f),
@@ -186,13 +279,15 @@ async function runFill(): Promise<FillResponse> {
     coverLetter,
     fileUploadHint: stillNeedManual,
     cvAttached: filesFilled > 0,
+    warning,
     debug: {
       scanned: fields.length,
       matched: answers.length,
       filled: fill.result?.filled ?? answers.length,
       skipped: fill.result?.skipped ?? 0,
       filesFilled,
-      unmatched: unmatched.slice(0, 20).map((f) => ({
+      usedLlm,
+      unmatched: leftover.slice(0, 20).map((f) => ({
         id: f.id,
         intent: f.intent,
         label: fieldLabel(f),

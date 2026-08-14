@@ -4,7 +4,7 @@ export default defineManifest({
   manifest_version: 3,
   name: 'Apply Filler',
   description:
-    'Fill job application forms from your saved profile (local matching, no AI for now).',
+    'Fill job applications from your profile; Gemini drafts cover letters and open questions.',
   version: '0.1.0',
   // Required for Firefox (temporary + permanent installs)
   browser_specific_settings: {

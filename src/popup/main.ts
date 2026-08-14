@@ -30,6 +30,7 @@ function showDebug(result: FillResponse | undefined | null) {
   if (typeof d.filesFilled === 'number') {
     lines.push(`cv files: ${d.filesFilled}`)
   }
+  if (d.usedLlm) lines.push('gemini: yes')
   if (d.unmatched.length) {
     lines.push('unmatched:')
     for (const u of d.unmatched) {
@@ -48,7 +49,7 @@ openOptions.addEventListener('click', (e) => {
 fillBtn.addEventListener('click', async () => {
   fillBtn.disabled = true
   debugEl.hidden = true
-  setStatus('Scanning page…')
+  setStatus('Scanning page & generating answers…')
   try {
     const result = await runtimeSendMessage<FillResponse>({ type: 'RUN_FILL' })
 
@@ -70,8 +71,9 @@ fillBtn.addEventListener('click', async () => {
     const parts = [
       `Filled ${result.debug?.filled ?? result.answers.length} of ${result.debug?.scanned ?? '?'} fields`,
     ]
+    if (result.debug?.usedLlm) parts.push('Gemini used')
     if (result.cvAttached || (result.debug?.filesFilled ?? 0) > 0) {
-      parts.push(`CV attached`)
+      parts.push('CV attached')
     } else if (result.fileUploadHint) {
       parts.push('attach CV manually if needed')
     }
@@ -80,6 +82,8 @@ fillBtn.addEventListener('click', async () => {
     if (unmatchedSalary) {
       parts.push('set Salary in Profile to fill salary field')
     }
+
+    if (result.warning) parts.push(result.warning)
 
     setStatus(`${parts.join(' · ')}.`, 'ok')
   } catch (err) {

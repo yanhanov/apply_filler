@@ -89,6 +89,7 @@ const scalarFields: Array<keyof CandidateProfile> = [
   'asyncExperience',
   'referralSource',
   'coverLetterTone',
+  'geminiApiKey',
 ]
 
 let skills: string[] = []
@@ -475,7 +476,6 @@ function readForm(): CandidateProfile {
     languagesList: languages.map((l) => ({ ...l })),
     educationList: education.map((e) => ({ ...e })),
     experienceList: experience.map((e) => ({ ...e })),
-    geminiApiKey: storedProfile.geminiApiKey,
   })
 }
 
@@ -611,7 +611,7 @@ resumeInput.addEventListener('change', async () => {
           : stringEntries.workExperience
             ? parseExperience(stringEntries.workExperience)
             : current.experienceList,
-      geminiApiKey: storedProfile.geminiApiKey,
+      geminiApiKey: current.geminiApiKey || storedProfile.geminiApiKey,
       coverLetterTone: current.coverLetterTone,
     })
 

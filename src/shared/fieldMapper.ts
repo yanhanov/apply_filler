@@ -156,7 +156,20 @@ const RULES: Rule[] = [
   },
   {
     intent: 'current_company',
-    patterns: [/current\s*(company|employer)/i, /employer/i, /организация/i, /компания/i],
+    patterns: [
+      /current\s*(company|employer)/i,
+      /company\s*name/i,
+      /employer\s*name/i,
+      /organization\s*name/i,
+      /organisation\s*name/i,
+      /\bemployer\b/i,
+      /\bcompany\b/i,
+      /organization/i,
+      /organisation/i,
+      /организация/i,
+      /компания/i,
+      /название\s*компании/i,
+    ],
   },
   {
     intent: 'work_experience',
@@ -172,6 +185,7 @@ const RULES: Rule[] = [
     intent: 'years_experience',
     patterns: [
       /years?\s*(of\s*)?exp/i,
+      /experience\s*(in\s*)?years/i,
       /experience\s*(years|yrs)/i,
       /total\s*experience/i,
       /стаж/i,
@@ -179,7 +193,15 @@ const RULES: Rule[] = [
   },
   {
     intent: 'current_title',
-    patterns: [/current\s*(job\s*)?title/i, /job\s*title/i, /position\s*title/i, /headline/i, /должность/i],
+    patterns: [
+      /current\s*(job\s*)?title/i,
+      /job\s*title/i,
+      /position\s*title/i,
+      /designation/i,
+      /headline/i,
+      /должность/i,
+      /\btitle\b/i,
+    ],
   },
   { intent: 'skills', patterns: [/\bskills?\b/i, /технолог/i, /competenc/i] },
   {
@@ -192,7 +214,14 @@ const RULES: Rule[] = [
   },
   {
     intent: 'full_name',
-    patterns: [/full\s*name/i, /your\s*name/i, /\bname\b/i, /applicant\s*name/i, /фио/i],
+    // Avoid "company name", "file name", "middle name", etc.
+    patterns: [
+      /full\s*name/i,
+      /your\s*name/i,
+      /applicant\s*name/i,
+      /фио/i,
+      /(?<!company\s)(?<!employer\s)(?<!organization\s)(?<!organisation\s)(?<!file\s)(?<!middle\s)(?<!user\s)(?<!school\s)(?<!university\s)\bname\b/i,
+    ],
   },
   {
     intent: 'location',
@@ -221,7 +250,12 @@ export function detectIntent(
 
   if (field.type === 'email' || field.autocomplete === 'email') return 'email'
   if (field.type === 'tel' || field.autocomplete === 'tel') return 'phone'
-  if (field.autocomplete === 'name') return 'full_name'
+  if (field.autocomplete === 'organization') return 'current_company'
+  if (field.autocomplete === 'name') {
+    // autocomplete=name on company fields is rare; still guard
+    if (/company|employer|organization|organisation/i.test(text)) return 'current_company'
+    return 'full_name'
+  }
   if (field.autocomplete === 'given-name') return 'first_name'
   if (field.autocomplete === 'family-name') return 'last_name'
   if (field.autocomplete === 'country' || field.autocomplete === 'country-name') return 'country'
