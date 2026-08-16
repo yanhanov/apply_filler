@@ -18,14 +18,41 @@ npm install
 npm run build
 ```
 
-### Firefox
+### Firefox (temporary — for development)
 
 1. `npm run build` (patches the manifest for Firefox)
 2. Open `about:debugging#/runtime/this-firefox`
 3. **Load Temporary Add-on…** → select `dist/manifest.json`
 4. After each rebuild, click **Reload** on the add-on card
 
-Needs Firefox **115+**. Temporary add-ons disappear when Firefox closes.
+Needs Firefox **140+** (AMO data-collection consent). Temporary add-ons disappear when Firefox closes.
+
+### Firefox (permanent — signed XPI)
+
+Release Firefox only installs **Mozilla-signed** add-ons. For personal permanent use, sign an **unlisted** build (stays private; not listed on AMO):
+
+1. Create a [Mozilla Add-ons account](https://addons.mozilla.org/)
+2. Generate API credentials: [API Keys](https://addons.mozilla.org/developers/addon/api/key/)
+3. Copy env file and fill credentials:
+
+```bash
+cp .env.example .env
+# edit .env → WEB_EXT_API_KEY + WEB_EXT_API_SECRET
+```
+
+4. Build + sign (private / permanent on your machine):
+
+```bash
+npm run sign:firefox
+```
+
+For a **public** AMO listing (needs `amo-metadata.json` with license/summary):
+
+```bash
+npm run publish:firefox
+```
+
+5. Install the file from `web-ext-artifacts/*.xpi` (unlisted), or wait for AMO review (listed).
 
 ### Chrome / Edge
 

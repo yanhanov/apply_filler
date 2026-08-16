@@ -1,0 +1,19 @@
+{
+  "name": {
+    "en-US": "Apply Filler"
+  },
+  "summary": {
+    "en-US": "Fill job application forms from your saved profile, attach your CV, and draft cover letters with Gemini."
+  },
+  "description": {
+    "en-US": "Apply Filler helps you complete job applications faster.\n\n• Matches common form fields from your local profile (name, email, salary prefs, and more)\n• Optionally drafts cover letters and open questions with your free Gemini API key\n• Can auto-attach a resume you imported in Options\n• Never submits forms for you — always review before sending\n\nYour profile stays in browser storage. Vacancy text and open-question labels are sent to Google Gemini only when you set an API key and those fields need answers."
+  },
+  "categories": {
+    "firefox": ["other"],
+    "android": ["other"]
+  },
+  "version": {
+    "license": "MIT",
+    "approval_notes": "Uses pdfjs-dist and mammoth only on the Options page to parse resumes locally. Function constructor / dynamic import warnings come from those third-party parsers, not from the content script fill path.\n\nThis submission is for the public (listed) channel. Same add-on ID as the existing unlisted build (apply-filler@local.dev)."
+  }
+}

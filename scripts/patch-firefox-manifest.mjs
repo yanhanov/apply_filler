@@ -39,7 +39,13 @@ manifest.background = {
 }
 
 if (manifest.browser_specific_settings?.gecko) {
-  manifest.browser_specific_settings.gecko.strict_min_version = '115.0'
+  manifest.browser_specific_settings.gecko.strict_min_version = '140.0'
+}
+if (!manifest.browser_specific_settings) {
+  manifest.browser_specific_settings = {}
+}
+manifest.browser_specific_settings.gecko_android = {
+  strict_min_version: '142.0',
 }
 
 if (Array.isArray(manifest.web_accessible_resources)) {
