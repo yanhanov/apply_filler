@@ -632,4 +632,44 @@ clearCvBtn.addEventListener('click', async () => {
   setImportStatus('CV removed. Import again to auto-attach on Fill.')
 })
 
+function setupSectionNav() {
+  const nav = document.querySelector('.nav')
+  if (!(nav instanceof HTMLElement)) return
+
+  const links = [...nav.querySelectorAll('a[href^="#"]')].filter(
+    (el): el is HTMLAnchorElement => el instanceof HTMLAnchorElement,
+  )
+  const sections = links
+    .map((link) => document.getElementById(link.hash.slice(1)))
+    .filter((el): el is HTMLElement => el instanceof HTMLElement)
+
+  if (!sections.length) return
+
+  const setActive = (id: string) => {
+    for (const link of links) {
+      link.classList.toggle('is-active', link.hash === `#${id}`)
+    }
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+      const top = visible[0]
+      if (top?.target instanceof HTMLElement && top.target.id) {
+        setActive(top.target.id)
+      }
+    },
+    {
+      rootMargin: '-20% 0px -55% 0px',
+      threshold: [0.15, 0.35, 0.55],
+    },
+  )
+
+  for (const section of sections) observer.observe(section)
+  setActive(sections[0].id)
+}
+
+setupSectionNav()
 void load()

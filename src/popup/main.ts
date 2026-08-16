@@ -48,6 +48,8 @@ openOptions.addEventListener('click', (e) => {
 
 fillBtn.addEventListener('click', async () => {
   fillBtn.disabled = true
+  fillBtn.classList.add('is-busy')
+  fillBtn.setAttribute('aria-busy', 'true')
   debugEl.hidden = true
   setStatus('Scanning page & generating answers…')
   try {
@@ -90,5 +92,7 @@ fillBtn.addEventListener('click', async () => {
     setStatus(err instanceof Error ? err.message : 'Unexpected error', 'error')
   } finally {
     fillBtn.disabled = false
+    fillBtn.classList.remove('is-busy')
+    fillBtn.removeAttribute('aria-busy')
   }
 })

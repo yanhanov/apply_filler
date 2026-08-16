@@ -8,11 +8,46 @@
   </head>
   <body>
     <header class="bar">
-      <strong class="logo">Apply Filler</strong>
-      <span class="bar-note">Profile · local storage</span>
+      <div class="brand">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 128 128" width="24" height="24" fill="none">
+            <rect x="22" y="14" width="78" height="100" rx="12" fill="#FFFFFF"/>
+            <rect x="22" y="14" width="78" height="100" rx="12" stroke="#E8EAED" stroke-width="1.5"/>
+            <rect x="36" y="36" width="50" height="7" rx="3.5" fill="#E8EAED"/>
+            <rect x="36" y="52" width="50" height="7" rx="3.5" fill="#E8EAED"/>
+            <rect x="36" y="68" width="34" height="7" rx="3.5" fill="#4285F4"/>
+            <rect x="36" y="84" width="42" height="7" rx="3.5" fill="#E8EAED"/>
+            <circle cx="92" cy="98" r="20" fill="#34A853"/>
+            <path
+              d="M83 98.4l5.8 5.8 12.4-13.2"
+              stroke="#FFFFFF"
+              stroke-width="5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        <strong class="logo">Apply Filler</strong>
+      </div>
+      <span class="bar-note">Profile · stored on this device</span>
     </header>
 
-    <main>
+    <div class="layout">
+      <nav class="nav" aria-label="Profile sections">
+        <a href="#gemini">Gemini</a>
+        <a href="#import">Import</a>
+        <a href="#contact">Contact</a>
+        <a href="#links">Links</a>
+        <a href="#role">Role</a>
+        <a href="#prefs">Preferences</a>
+        <a href="#skills-section">Skills</a>
+        <a href="#languages-section">Languages</a>
+        <a href="#education-section">Education</a>
+        <a href="#experience-section">Experience</a>
+        <a href="#bio-section">Bio</a>
+      </nav>
+
+      <main>
       <form id="profile-form">
         <section id="gemini">
           <h2>Gemini (optional)</h2>
@@ -328,11 +363,14 @@
         </section>
 
         <div class="footer">
-          <button type="submit">Save profile</button>
-          <p id="save-status" class="status" role="status"></p>
+          <div class="footer-inner">
+            <button type="submit">Save profile</button>
+            <p id="save-status" class="status" role="status"></p>
+          </div>
         </div>
       </form>
-    </main>
+      </main>
+    </div>
     <script type="module" src="main.ts"></script>
   </body>
 </html>
