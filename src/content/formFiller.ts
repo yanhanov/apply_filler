@@ -2,6 +2,12 @@ import type { FieldAnswer } from '../shared/types'
 import { expandPreferenceAliases } from '../shared/preferenceValues'
 import { base64ToUint8Array } from '../shared/cvStorage'
 import type { ScannedFileField } from '../shared/cvTypes'
+import {
+  findHhRuContentEditableLetter,
+  findHhRuCoverLetterTextarea,
+  isHhRuHost,
+  prepareHhRuForm,
+} from './sites/hhRu'
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -211,6 +217,15 @@ function isVisibleLoose(el: HTMLElement): boolean {
   return rect.width > 0 && rect.height > 0
 }
 
+function fillContentEditable(el: HTMLElement, value: string): boolean {
+  if (!value) return false
+  el.focus()
+  el.textContent = value
+  el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: value }))
+  el.dispatchEvent(new Event('change', { bubbles: true }))
+  return true
+}
+
 export async function fillFields(
   answers: FieldAnswer[],
   coverLetter: string,
@@ -221,23 +236,49 @@ export async function fillFields(
   let skipped = 0
   let filesFilled = 0
 
+  if (isHhRuHost()) {
+    await prepareHhRuForm()
+  }
+
   const withCover = [...answers]
   if (coverLetter) {
     const hasCover = answers.some((a) => {
       const el = findByFieldId(a.id)
       if (!el) return false
-      const hint = [el.getAttribute('name'), el.getAttribute('placeholder'), el.id]
+      const hint = [
+        el.getAttribute('name'),
+        el.getAttribute('placeholder'),
+        el.getAttribute('aria-label'),
+        el.getAttribute('data-qa'),
+        el.id,
+      ]
         .filter(Boolean)
         .join(' ')
-      return /cover|motivation|сопровод|мотивац/i.test(hint)
+      return /cover|motivation|сопровод|мотивац|письм|letter|^text$/i.test(hint)
     })
     if (!hasCover) {
-      const textarea = document.querySelector<HTMLTextAreaElement>(
-        'textarea[name*="cover" i], textarea[id*="cover" i], textarea[placeholder*="cover" i], textarea[aria-label*="cover" i]',
-      )
+      const textarea =
+        findHhRuCoverLetterTextarea() ||
+        document.querySelector<HTMLTextAreaElement>(
+          [
+            'textarea[name*="cover" i]',
+            'textarea[id*="cover" i]',
+            'textarea[placeholder*="cover" i]',
+            'textarea[aria-label*="cover" i]',
+            'textarea[placeholder*="сопровод" i]',
+            'textarea[placeholder*="письм" i]',
+            'textarea[name="text"]',
+          ].join(', '),
+        )
       if (textarea) {
         if (!textarea.dataset.applyFillerId) textarea.dataset.applyFillerId = 'cover-fallback'
         withCover.push({ id: textarea.dataset.applyFillerId, value: coverLetter })
+      } else {
+        const editable = findHhRuContentEditableLetter()
+        if (editable) {
+          if (!editable.dataset.applyFillerId) editable.dataset.applyFillerId = 'cover-editable'
+          withCover.push({ id: editable.dataset.applyFillerId, value: coverLetter })
+        }
       }
     }
   }
@@ -281,6 +322,12 @@ export async function fillFields(
         setNativeValue(el, value)
         dispatchInputEvents(el)
         filled += 1
+        continue
+      }
+
+      if (el.isContentEditable || el.getAttribute('contenteditable') === 'true') {
+        if (fillContentEditable(el, answer.value)) filled += 1
+        else skipped += 1
         continue
       }
 

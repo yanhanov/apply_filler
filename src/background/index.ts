@@ -138,8 +138,12 @@ async function runFill(): Promise<FillResponse> {
   const { vacancy, fields, fileUploadCount, fileFields } = scan.result
   const storedCv = await loadStoredCv()
   const hasCv = Boolean(storedCv)
+  const hhCoverOnly =
+    fields.length === 0 &&
+    /hh\.(ru|kz|uz)|headhunter\.|rabota\.by|tut\.by/i.test(vacancy.pageUrl) &&
+    /vacancy_response|vacancyId=/i.test(vacancy.pageUrl)
 
-  if (fields.length === 0 && !(hasCv && fileFields.length > 0)) {
+  if (fields.length === 0 && !(hasCv && fileFields.length > 0) && !hhCoverOnly) {
     return {
       ok: false,
       answers: [],
@@ -170,13 +174,16 @@ async function runFill(): Promise<FillResponse> {
   let usedLlm = false
   let warning: string | undefined
 
-  if (llmFields.length > 0 && hasApiKey) {
+  const shouldDraftCover =
+    (llmFields.length > 0 || hhCoverOnly) && hasApiKey
+
+  if (shouldDraftCover) {
     try {
       const llm = await generateWithGemini({
         apiKey: profile.geminiApiKey,
         profile,
         vacancy,
-        fields: llmFields,
+        fields: llmFields.length > 0 ? llmFields : [],
       })
       usedLlm = true
       llmAnswers = llm.answers
@@ -194,7 +201,7 @@ async function runFill(): Promise<FillResponse> {
         coverLetter = localCover?.value ?? ''
       }
     }
-  } else if (llmFields.length > 0 && !hasApiKey) {
+  } else if ((llmFields.length > 0 || hhCoverOnly) && !hasApiKey) {
     warning =
       'Add a Gemini API key in Options to draft cover letters and open questions.'
   }
@@ -208,7 +215,11 @@ async function runFill(): Promise<FillResponse> {
 
   const leftover = unmatchedAfter(fields, answers)
 
-  if (answers.length === 0 && !(hasCv && fileFields.length > 0)) {
+  if (
+    answers.length === 0 &&
+    !(hasCv && fileFields.length > 0) &&
+    !(hhCoverOnly && coverLetter.trim())
+  ) {
     return {
       ok: false,
       answers: [],

@@ -1,5 +1,5 @@
 import { fillFields } from './formFiller'
-import { scanFormFields } from './formScanner'
+import { prepareFormForScan, scanFormFields } from './formScanner'
 import { parseVacancy } from './vacancyParser'
 import { loadStoredCv } from '../shared/cvStorage'
 import type { FieldAnswer, FillPageResult, ScanPageResult } from '../shared/types'
@@ -16,18 +16,19 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
   if (message.type === 'SCAN_PAGE') {
-    try {
+    ;(async () => {
+      await prepareFormForScan()
       const vacancy = parseVacancy()
       const { fields, fileUploadCount, fileFields } = scanFormFields()
       const result: ScanPageResult = { vacancy, fields, fileUploadCount, fileFields }
       sendResponse({ ok: true, result })
-    } catch (err) {
+    })().catch((err) =>
       sendResponse({
         ok: false,
         error: err instanceof Error ? err.message : 'Scan failed',
-      })
-    }
-    return false
+      }),
+    )
+    return true
   }
 
   if (message.type === 'FILL_PAGE') {

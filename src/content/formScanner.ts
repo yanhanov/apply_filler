@@ -1,6 +1,12 @@
 import { detectIntent, intentNeedsLlm } from '../shared/fieldMapper'
 import type { FileUploadKind, ScannedFileField } from '../shared/cvTypes'
-import type { ScannedField } from '../shared/types'
+import type { FieldIntent, ScannedField } from '../shared/types'
+import {
+  hhFieldHint,
+  isHhRuHost,
+  looksLikeHhCoverLetter,
+  prepareHhRuForm,
+} from './sites/hhRu'
 
 const SKIP_TYPES = new Set([
   'hidden',
@@ -43,6 +49,27 @@ function labelFor(el: HTMLElement): string {
       .filter(Boolean)
       .join(' ')
   }
+
+  // Magritte / hh.ru: question title near the control
+  if (isHhRuHost()) {
+    const hhHint = hhFieldHint(el)
+    const block = el.closest(
+      '[data-qa*="question" i], [data-qa*="task" i], [data-qa*="response" i], fieldset, li, section',
+    )
+    if (block) {
+      const clone = block.cloneNode(true) as HTMLElement
+      clone.querySelectorAll('input, textarea, select, button, svg, script, style').forEach((n) =>
+        n.remove(),
+      )
+      const text = (clone.textContent ?? '').replace(/\s+/g, ' ').trim()
+      if (text && text.length >= 3 && text.length < 280) return text
+    }
+    if (hhHint && /сопровод|письм|вопрос/i.test(hhHint)) {
+      const short = hhHint.replace(/\s+/g, ' ').trim().slice(0, 200)
+      if (short) return short
+    }
+  }
+
   const group = el.closest('div, fieldset, section, li')
   const nearby = group?.querySelector('label')
   if (nearby?.textContent) {
@@ -123,6 +150,31 @@ function fileFieldContext(el: HTMLInputElement): string {
   return chunks.join(' ')
 }
 
+function refineIntent(
+  el: HTMLElement,
+  base: Pick<
+    ScannedField,
+    'id' | 'name' | 'placeholder' | 'label' | 'ariaLabel' | 'autocomplete' | 'type' | 'tagName'
+  >,
+  detected: FieldIntent,
+): FieldIntent {
+  if (!isHhRuHost()) return detected
+
+  const hint = [base.label, base.placeholder, base.name, base.ariaLabel, hhFieldHint(el)].join(' ')
+  if (looksLikeHhCoverLetter(hint, el)) return 'cover_letter'
+
+  // Employer screening questions on vacancy_response
+  if (
+    (el instanceof HTMLTextAreaElement || base.type === 'text') &&
+    detected === 'unknown' &&
+    /(вопрос|расскажите|опишите|почему|ваш опыт|готовы ли)/i.test(hint)
+  ) {
+    return 'custom_question'
+  }
+
+  return detected
+}
+
 function pushField(
   fields: ScannedField[],
   el: HTMLElement,
@@ -147,7 +199,7 @@ function pushField(
     autocomplete,
   }
 
-  const intent = detectIntent(base)
+  const intent = refineIntent(el, base, detectIntent(base))
   fields.push({
     ...base,
     options: extras.options ?? optionTexts(el),
@@ -175,7 +227,7 @@ function scanCustomButtons(fields: ScannedField[], startIndex: number): number {
       btn.getAttribute('role') === 'combobox'
 
     if (!looksLikeSelect && !/country/i.test(text + aria)) continue
-    if (/submit|apply|next|continue|add language/i.test(text)) continue
+    if (/submit|apply|next|continue|add language|отклик|сопровод/i.test(text)) continue
     if (btn.dataset.applyFillerId) continue
 
     const label = labelFor(btn) || text
@@ -199,6 +251,19 @@ function isFileInputPresent(el: HTMLInputElement): boolean {
   const style = window.getComputedStyle(el)
   if (style.display === 'none') return false
   return true
+}
+
+function shouldScanControl(el: HTMLElement, type: string): boolean {
+  if (isVisible(el)) return true
+  // After prepare, HH letter textarea can still briefly report 0×0 — keep it if letter-like
+  if (isHhRuHost() && (type === 'textarea' || el instanceof HTMLTextAreaElement)) {
+    return looksLikeHhCoverLetter(hhFieldHint(el), el)
+  }
+  return false
+}
+
+export async function prepareFormForScan(): Promise<void> {
+  await prepareHhRuForm()
 }
 
 export function scanFormFields(): {
@@ -245,7 +310,7 @@ export function scanFormFields(): {
       return
     }
     if (SKIP_TYPES.has(type)) return
-    if (!isVisible(el)) return
+    if (!shouldScanControl(el, type)) return
 
     const currentValue =
       el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement

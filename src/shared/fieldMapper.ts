@@ -23,8 +23,12 @@ const RULES: Rule[] = [
     patterns: [
       /cover\s*letter/i,
       /motivation\s*letter/i,
+      /covering\s*letter/i,
       /сопровод/i,
       /мотивац/i,
+      /письм[оа].*отклик/i,
+      /отклик.*письм/i,
+      /напишите\s*(сопровод|письм)/i,
       /why\s*(do\s*)?you\s*(want|apply)/i,
     ],
   },
