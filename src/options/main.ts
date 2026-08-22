@@ -89,6 +89,7 @@ const scalarFields: Array<keyof CandidateProfile> = [
   'asyncExperience',
   'referralSource',
   'coverLetterTone',
+  'coverLetterPrompt',
   'geminiApiKey',
 ]
 
@@ -613,6 +614,7 @@ resumeInput.addEventListener('change', async () => {
             : current.experienceList,
       geminiApiKey: current.geminiApiKey || storedProfile.geminiApiKey,
       coverLetterTone: current.coverLetterTone,
+      coverLetterPrompt: current.coverLetterPrompt || storedProfile.coverLetterPrompt,
     })
 
     writeForm(merged)

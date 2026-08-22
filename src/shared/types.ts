@@ -103,6 +103,8 @@ export interface CandidateProfile {
   asyncExperience: string
   referralSource: string
   coverLetterTone: CoverLetterTone
+  /** Extra instructions for Gemini when drafting the cover letter. */
+  coverLetterPrompt: string
   geminiApiKey: string
 }
 
@@ -148,6 +150,7 @@ export const DEFAULT_PROFILE: CandidateProfile = {
   asyncExperience: '',
   referralSource: '',
   coverLetterTone: 'professional',
+  coverLetterPrompt: '',
   geminiApiKey: '',
 }
 

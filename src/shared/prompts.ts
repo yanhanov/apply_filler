@@ -63,6 +63,14 @@ export function buildFillPrompt(params: {
         ? 'Keep cover letter 150-220 words, warm and energetic but still professional.'
         : 'Keep cover letter 150-280 words, clear and professional.'
 
+  const customCoverPrompt = profile.coverLetterPrompt.trim()
+  const customCoverBlock = customCoverPrompt
+    ? `
+USER COVER LETTER INSTRUCTIONS (follow closely; when they conflict with tone defaults below, prefer these):
+${customCoverPrompt}
+`
+    : ''
+
   return `You help fill open / free-text job application fields.
 
 Return ONLY valid JSON (no markdown fences) with this shape:
@@ -82,6 +90,7 @@ Rules:
 - Include an answer for EVERY listed field id. Do not invent extra ids.
 - If a field intent is cover_letter (or the label is a cover/motivation letter), set its value to the same text as coverLetter.
 - Leave value empty only if the profile truly has no basis to answer.
+${customCoverBlock}
 
 CANDIDATE PROFILE:
 ${profileBlock}
