@@ -1,7 +1,45 @@
+import { buildProfileTextBlock } from './profileText'
 import type { CandidateProfile, ScannedField, VacancyInfo } from './types'
 
 function fieldLabel(f: ScannedField, index: number): string {
   return f.label || f.placeholder || f.ariaLabel || f.name || f.id || `field_${index}`
+}
+
+export function buildSelectionAnswerPrompt(params: {
+  profile: CandidateProfile
+  vacancy: VacancyInfo
+  question: string
+}): string {
+  const { profile, vacancy, question } = params
+  const profileBlock = buildProfileTextBlock(profile)
+  const custom = profile.coverLetterPrompt.trim()
+
+  return `You help a job applicant answer one application question.
+
+Write ONLY the answer text — no quotes, labels, markdown, or JSON.
+
+Rules:
+- Answer in the same language as the question.
+- Use ONLY facts from the candidate profile and vacancy context below.
+- Do not invent employers, degrees, skills, dates, or achievements.
+- For yes/no questions: one short sentence.
+- For open questions: 2–6 sentences, clear and professional.
+- Tone: ${profile.coverLetterTone}.
+${custom ? `- Extra instructions from the candidate:\n${custom}` : ''}
+
+QUESTION:
+${question.trim()}
+
+CANDIDATE PROFILE:
+${profileBlock}
+
+VACANCY:
+Title: ${vacancy.title || '(unknown)'}
+Company: ${vacancy.company || '(unknown)'}
+URL: ${vacancy.pageUrl}
+Description:
+${vacancy.description.slice(0, 6000)}
+`
 }
 
 export function buildFillPrompt(params: {
@@ -11,42 +49,7 @@ export function buildFillPrompt(params: {
 }): string {
   const { profile, vacancy, fields } = params
 
-  const profileBlock = [
-    `Full name: ${profile.fullName}`,
-    `Email: ${profile.email}`,
-    `Phone: ${profile.phone}`,
-    `Country: ${profile.country}`,
-    `City: ${profile.city}`,
-    `Location: ${profile.location}`,
-    `LinkedIn: ${profile.linkedin}`,
-    `GitHub: ${profile.github}`,
-    `Portfolio: ${profile.portfolio}`,
-    `Twitter: ${profile.twitter}`,
-    `Telegram: ${profile.telegram}`,
-    `Current title: ${profile.currentTitle}`,
-    `Current company: ${profile.currentCompany}`,
-    `Years of experience: ${profile.yearsExperience}`,
-    `Skills: ${profile.skills}`,
-    `Languages: ${profile.languages}`,
-    `Education:\n${profile.education}`,
-    `Work experience:\n${profile.workExperience}`,
-    `Bio / achievements: ${profile.bio}`,
-    `Preferred salary: ${profile.preferredSalary || 'not specified'}`,
-    `Notice period: ${profile.noticePeriod}`,
-    `Work arrangement: ${profile.workArrangement}`,
-    `Employment type: ${profile.employmentType}`,
-    `Availability: ${profile.availability}`,
-    `Timezone: ${profile.timezone}`,
-    `Remote experience: ${profile.remoteExperience}`,
-    `Work authorization: ${profile.workAuthorization}`,
-    `Tax residency matches employer: ${profile.taxResidencyMatches}`,
-    `Willing to relocate: ${profile.willingToRelocate}`,
-    `Self-employed: ${profile.selfEmployed}`,
-    `Home office: ${profile.homeOffice}`,
-    `Async / distributed experience: ${profile.asyncExperience}`,
-    `Referral source: ${profile.referralSource}`,
-    `Cover letter tone: ${profile.coverLetterTone}`,
-  ].join('\n')
+  const profileBlock = buildProfileTextBlock(profile)
 
   const fieldsBlock = fields
     .map((f, i) => {

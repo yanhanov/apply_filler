@@ -1,5 +1,5 @@
 import { mapFieldsWithProfile } from '../shared/fieldMapper'
-import { generateWithGemini } from '../shared/gemini'
+import { generateWithGemini, generateSelectionAnswer } from '../shared/gemini'
 import { tabsSendMessage } from '../shared/messaging'
 import { loadProfile, saveProfile } from '../shared/storage'
 import {
@@ -10,11 +10,13 @@ import {
 } from '../shared/cvStorage'
 import type { StoredCvFile } from '../shared/cvTypes'
 import type {
+  AiAnswerResponse,
   CandidateProfile,
   FieldAnswer,
   FillResponse,
   ScannedField,
   ScanPageResult,
+  VacancyInfo,
 } from '../shared/types'
 
 async function getActiveTabId(): Promise<number> {
@@ -385,6 +387,41 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           fileUploadHint: false,
           error: err instanceof Error ? err.message : 'Unexpected error',
         } satisfies FillResponse),
+      )
+    return true
+  }
+
+  if (message.type === 'RUN_AI_ANSWER') {
+    const question = String(message.question ?? '')
+    const vacancy = message.vacancy as VacancyInfo
+    loadProfile()
+      .then(async (profile) => {
+        if (!profile.geminiApiKey.trim()) {
+          return {
+            ok: false,
+            error: 'Add a Gemini API key in Options → Gemini.',
+          } satisfies AiAnswerResponse
+        }
+        if (!profile.fullName.trim() && !profile.email.trim() && !profile.bio.trim()) {
+          return {
+            ok: false,
+            error: 'Fill your profile in Options first.',
+          } satisfies AiAnswerResponse
+        }
+        const answer = await generateSelectionAnswer({
+          apiKey: profile.geminiApiKey,
+          profile,
+          vacancy,
+          question,
+        })
+        return { ok: true, answer } satisfies AiAnswerResponse
+      })
+      .then((result) => sendResponse(result))
+      .catch((err) =>
+        sendResponse({
+          ok: false,
+          error: err instanceof Error ? err.message : 'Unexpected error',
+        } satisfies AiAnswerResponse),
       )
     return true
   }

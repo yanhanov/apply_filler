@@ -1,4 +1,4 @@
-import { buildFillPrompt, extractJsonObject } from './prompts'
+import { buildFillPrompt, buildSelectionAnswerPrompt, extractJsonObject } from './prompts'
 import type {
   CandidateProfile,
   FieldAnswer,
@@ -111,4 +111,59 @@ export async function generateWithGemini(params: {
   }
 
   return { coverLetter, answers }
+}
+
+export async function generateSelectionAnswer(params: {
+  apiKey: string
+  profile: CandidateProfile
+  vacancy: VacancyInfo
+  question: string
+}): Promise<string> {
+  const { apiKey, profile, vacancy, question } = params
+
+  if (!apiKey.trim()) {
+    throw new Error('Add your Gemini API key in Options.')
+  }
+  if (!question.trim()) {
+    throw new Error('Select question text on the page first.')
+  }
+
+  const prompt = buildSelectionAnswerPrompt({ profile, vacancy, question })
+  const url = `${GEMINI_URL}?key=${encodeURIComponent(apiKey.trim())}`
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.35,
+        maxOutputTokens: 1024,
+      },
+    }),
+  })
+
+  const raw = await res.text()
+  if (!res.ok) {
+    throw new Error(friendlyGeminiError(res.status, raw))
+  }
+
+  let data: GeminiResponse
+  try {
+    data = JSON.parse(raw) as GeminiResponse
+  } catch {
+    throw new Error('Unexpected Gemini response')
+  }
+
+  if (data.error?.message) {
+    throw new Error(data.error.message)
+  }
+
+  const text =
+    data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? ''
+  const answer = text.trim().replace(/^["']|["']$/g, '')
+  if (!answer) {
+    throw new Error('Empty response from Gemini')
+  }
+  return answer
 }

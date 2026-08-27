@@ -1,5 +1,6 @@
 import { fillFields } from './formFiller'
 import { prepareFormForScan, scanFormFields } from './formScanner'
+import { initSelectionAi } from './selectionAi'
 import { parseVacancy } from './vacancyParser'
 import { loadStoredCv } from '../shared/cvStorage'
 import type { FieldAnswer, FillPageResult, ScanPageResult } from '../shared/types'
@@ -60,3 +61,5 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   return false
 })
+
+initSelectionAi()

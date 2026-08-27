@@ -223,6 +223,13 @@ export type MessageType =
   | { type: 'SAVE_CV'; cv: import('./cvTypes').StoredCvFile }
   | { type: 'CLEAR_CV' }
   | { type: 'RUN_FILL' }
+  | { type: 'RUN_AI_ANSWER'; question: string; vacancy: VacancyInfo }
+
+export type AiAnswerResponse = {
+  ok: boolean
+  answer?: string
+  error?: string
+}
 
 export type ScanPageResult = {
   vacancy: VacancyInfo
