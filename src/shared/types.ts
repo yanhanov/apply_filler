@@ -1,5 +1,7 @@
 export type CoverLetterTone = 'short' | 'professional' | 'enthusiastic'
 
+export type AiProvider = 'gemini' | 'openai' | 'claude' | 'grok' | 'openrouter'
+
 export type FieldIntent =
   | 'full_name'
   | 'first_name'
@@ -105,7 +107,15 @@ export interface CandidateProfile {
   coverLetterTone: CoverLetterTone
   /** Extra instructions for Gemini when drafting the cover letter. */
   coverLetterPrompt: string
+  /** Active AI provider for Fill and selection answers. */
+  aiProvider: AiProvider
   geminiApiKey: string
+  openaiApiKey: string
+  claudeApiKey: string
+  grokApiKey: string
+  openrouterApiKey: string
+  /** Optional OpenRouter model slug, e.g. google/gemini-2.0-flash-001 */
+  openrouterModel: string
 }
 
 export const DEFAULT_PROFILE: CandidateProfile = {
@@ -151,7 +161,13 @@ export const DEFAULT_PROFILE: CandidateProfile = {
   referralSource: '',
   coverLetterTone: 'professional',
   coverLetterPrompt: '',
+  aiProvider: 'gemini',
   geminiApiKey: '',
+  openaiApiKey: '',
+  claudeApiKey: '',
+  grokApiKey: '',
+  openrouterApiKey: '',
+  openrouterModel: '',
 }
 
 export interface VacancyInfo {

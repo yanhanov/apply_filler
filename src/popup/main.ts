@@ -30,7 +30,7 @@ function showDebug(result: FillResponse | undefined | null) {
   if (typeof d.filesFilled === 'number') {
     lines.push(`cv files: ${d.filesFilled}`)
   }
-  if (d.usedLlm) lines.push('gemini: yes')
+  if (d.usedLlm) lines.push('AI used')
   if (d.unmatched.length) {
     lines.push('unmatched:')
     for (const u of d.unmatched) {
@@ -73,7 +73,7 @@ fillBtn.addEventListener('click', async () => {
     const parts = [
       `Filled ${result.debug?.filled ?? result.answers.length} of ${result.debug?.scanned ?? '?'} fields`,
     ]
-    if (result.debug?.usedLlm) parts.push('Gemini used')
+    if (result.debug?.usedLlm) parts.push('AI used')
     if (result.cvAttached || (result.debug?.filesFilled ?? 0) > 0) {
       parts.push('CV attached')
     } else if (result.fileUploadHint) {

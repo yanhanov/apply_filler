@@ -158,9 +158,17 @@ a:hover {
   background: var(--accent-soft);
 }
 
-main {
-  min-width: 0;
+.ai-key-field[hidden] {
+  display: none !important;
 }
+
+.ai-key-field.is-active input,
+.ai-key-field.is-active select,
+.ai-key-field.is-active textarea {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(21, 94, 239, 0.12);
+}
+
 
 section {
   margin-bottom: 16px;

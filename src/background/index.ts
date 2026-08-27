@@ -1,5 +1,6 @@
 import { mapFieldsWithProfile } from '../shared/fieldMapper'
-import { generateWithGemini, generateSelectionAnswer } from '../shared/gemini'
+import { generateFill, generateSelectionAnswer, hasAiConfigured } from '../shared/ai/client'
+import { providerMeta } from '../shared/ai/providers'
 import { tabsSendMessage } from '../shared/messaging'
 import { loadProfile, saveProfile } from '../shared/storage'
 import {
@@ -169,7 +170,8 @@ async function runFill(): Promise<FillResponse> {
 
   const { answered: localAnswers } = mapFieldsWithProfile(fields, profile)
   const llmFields = fields.filter((f) => f.needsLlm)
-  const hasApiKey = Boolean(profile.geminiApiKey.trim())
+  const hasApiKey = hasAiConfigured(profile)
+  const aiLabel = providerMeta(profile.aiProvider).label
 
   let coverLetter = profile.bio.trim()
   let llmAnswers: FieldAnswer[] = []
@@ -181,8 +183,7 @@ async function runFill(): Promise<FillResponse> {
 
   if (shouldDraftCover) {
     try {
-      const llm = await generateWithGemini({
-        apiKey: profile.geminiApiKey,
+      const llm = await generateFill({
         profile,
         vacancy,
         fields: llmFields.length > 0 ? llmFields : [],
@@ -205,7 +206,7 @@ async function runFill(): Promise<FillResponse> {
     }
   } else if ((llmFields.length > 0 || hhCoverOnly) && !hasApiKey) {
     warning =
-      'Add a Gemini API key in Options to draft cover letters and open questions.'
+      `Add a ${aiLabel} API key in Options → AI to draft cover letters and open questions.`
   }
 
   const answers = mergeAnswers({
@@ -230,7 +231,7 @@ async function runFill(): Promise<FillResponse> {
       warning,
       error:
         llmFields.length > 0 && !hasApiKey
-          ? 'No profile fields matched. Add a Gemini API key in Options for open questions / cover letter.'
+          ? `No profile fields matched. Add a ${aiLabel} API key in Options → AI for open questions / cover letter.`
           : `Scanned ${fields.length} fields, matched 0 to profile.`,
       debug: {
         scanned: fields.length,
@@ -396,10 +397,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const vacancy = message.vacancy as VacancyInfo
     loadProfile()
       .then(async (profile) => {
-        if (!profile.geminiApiKey.trim()) {
+        if (!hasAiConfigured(profile)) {
           return {
             ok: false,
-            error: 'Add a Gemini API key in Options → Gemini.',
+            error: `Add a ${providerMeta(profile.aiProvider).label} API key in Options → AI.`,
           } satisfies AiAnswerResponse
         }
         if (!profile.fullName.trim() && !profile.email.trim() && !profile.bio.trim()) {
@@ -409,7 +410,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           } satisfies AiAnswerResponse
         }
         const answer = await generateSelectionAnswer({
-          apiKey: profile.geminiApiKey,
           profile,
           vacancy,
           question,

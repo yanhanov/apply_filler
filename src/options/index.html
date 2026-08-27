@@ -34,7 +34,7 @@
 
     <div class="layout">
       <nav class="nav" aria-label="Profile sections">
-        <a href="#gemini">Gemini</a>
+        <a href="#ai">AI</a>
         <a href="#import">Import</a>
         <a href="#contact">Contact</a>
         <a href="#links">Links</a>
@@ -49,24 +49,52 @@
 
       <main>
       <form id="profile-form">
-        <section id="gemini">
-          <h2>Gemini (optional)</h2>
+        <section id="ai">
+          <h2>AI (optional)</h2>
           <p class="help">
-            Free API key for tailored cover letters and open questions. Profile fields still fill locally without it.
-            Get a key at
-            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Google AI Studio</a>.
+            API key for cover letters and open questions. Profile fields still fill locally without AI.
+            Keys are stored only in this browser.
           </p>
           <div class="grid">
             <label class="span-2">
-              API key
-              <input
-                id="geminiApiKey"
-                name="geminiApiKey"
-                type="password"
-                autocomplete="off"
-                spellcheck="false"
-                placeholder="AIza…"
-              />
+              Active provider
+              <select id="aiProvider" name="aiProvider">
+                <option value="gemini">Google Gemini</option>
+                <option value="openai">ChatGPT (OpenAI)</option>
+                <option value="claude">Claude (Anthropic)</option>
+                <option value="grok">Grok (xAI)</option>
+                <option value="openrouter">OpenRouter</option>
+              </select>
+            </label>
+            <label class="span-2 ai-key-field is-active" data-provider="gemini">
+              Gemini API key
+              <input id="geminiApiKey" name="geminiApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…" />
+              <span class="field-hint"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Google AI Studio</a></span>
+            </label>
+            <label class="span-2 ai-key-field" data-provider="openai" hidden>
+              OpenAI API key
+              <input id="openaiApiKey" name="openaiApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…" />
+              <span class="field-hint"><a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">OpenAI platform</a></span>
+            </label>
+            <label class="span-2 ai-key-field" data-provider="claude" hidden>
+              Claude API key
+              <input id="claudeApiKey" name="claudeApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…" />
+              <span class="field-hint"><a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">Anthropic console</a></span>
+            </label>
+            <label class="span-2 ai-key-field" data-provider="grok" hidden>
+              Grok (xAI) API key
+              <input id="grokApiKey" name="grokApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="xai-…" />
+              <span class="field-hint"><a href="https://console.x.ai/" target="_blank" rel="noreferrer">xAI console</a></span>
+            </label>
+            <label class="span-2 ai-key-field" data-provider="openrouter" hidden>
+              OpenRouter API key
+              <input id="openrouterApiKey" name="openrouterApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-or-…" />
+              <span class="field-hint"><a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer">OpenRouter keys</a></span>
+            </label>
+            <label class="span-2 ai-key-field" data-provider="openrouter" hidden>
+              OpenRouter model (optional)
+              <input id="openrouterModel" name="openrouterModel" type="text" autocomplete="off" spellcheck="false" placeholder="google/gemini-2.0-flash-001" />
+              <span class="field-hint">Any model slug from OpenRouter. Leave empty for default.</span>
             </label>
             <label class="span-2">
               Cover letter prompt
@@ -77,7 +105,7 @@
                 placeholder="e.g. Start with why this company. Mention React + TypeScript. Keep under 180 words. End with availability."
               ></textarea>
               <span class="field-hint">
-                Optional. Gemini follows this when drafting the cover letter (structure, skills to mention, length, language). Overrides tone defaults when they conflict.
+                Optional. AI follows this when drafting the cover letter (structure, skills, length, language).
               </span>
             </label>
           </div>

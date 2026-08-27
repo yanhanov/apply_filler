@@ -1,4 +1,5 @@
 import type {
+  AiProvider,
   CandidateProfile,
   CoverLetterTone,
   EducationEntry,
@@ -90,7 +91,13 @@ const scalarFields: Array<keyof CandidateProfile> = [
   'referralSource',
   'coverLetterTone',
   'coverLetterPrompt',
+  'aiProvider',
   'geminiApiKey',
+  'openaiApiKey',
+  'claudeApiKey',
+  'grokApiKey',
+  'openrouterApiKey',
+  'openrouterModel',
 ]
 
 let skills: string[] = []
@@ -375,6 +382,8 @@ function readScalars(): CandidateProfile {
     if (!el) continue
     if (key === 'coverLetterTone') {
       profile.coverLetterTone = el.value as CoverLetterTone
+    } else if (key === 'aiProvider') {
+      profile.aiProvider = el.value as AiProvider
     } else if (typeof profile[key] === 'string') {
       ;(profile[key] as string) = el.value
     }
@@ -484,7 +493,20 @@ function writeForm(profile: CandidateProfile) {
   const hydrated = hydrateProfileLists(profile)
   writeScalars(hydrated)
   applyLists(hydrated)
+  syncAiKeyFields()
 }
+
+function syncAiKeyFields() {
+  const provider =
+    (document.getElementById('aiProvider') as HTMLSelectElement | null)?.value ?? 'gemini'
+  document.querySelectorAll<HTMLElement>('.ai-key-field').forEach((el) => {
+    const active = el.dataset.provider === provider
+    el.hidden = !active
+    el.classList.toggle('is-active', active)
+  })
+}
+
+document.getElementById('aiProvider')?.addEventListener('change', syncAiKeyFields)
 
 function setImportStatus(text: string, error = false) {
   importStatus.textContent = text
