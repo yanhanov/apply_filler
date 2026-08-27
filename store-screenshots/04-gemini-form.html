@@ -1,34 +1,136 @@
-<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="shared.css">
-<style>
-body{position:relative;display:block;padding:40px 48px}
-.scene{display:flex;gap:28px;align-items:flex-start;margin-top:120px}
-</style></head>
-<body>
-  <div class="caption" style="max-width:560px">
-    <div class="badge">Gemini optional</div>
-    <h1>Cover letters & open answers, when you need them</h1>
-    <p>Import a CV, set a free Gemini key, and draft tailored answers from the vacancy text — profile fields still fill without AI.</p>
-  </div>
-  <div class="scene">
-    <div class="options" style="width:560px;height:520px;grid-template-columns:1fr">
-      <div class="main">
-        <h2>Gemini (optional)</h2>
-        <p class="help">Free API key for tailored cover letters. Profile fields still fill locally without it.</p>
-        <label style="margin-bottom:18px">API key<input type="password" value="AIza••••••••••••" style="width:100%"></label>
-        <h2>Import</h2>
-        <p class="help">PDF or DOCX — parses on-device and auto-attaches as CV on Fill.</p>
-        <div class="file">Choose resume / CV</div>
-        <div class="chip"><div><strong>yan-hanov.pdf</strong><span>148 KB · ready to attach</span></div></div>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      body {
+        position: relative;
+        display: block;
+        padding: 40px 48px;
+      }
+      .scene {
+        display: flex;
+        gap: 28px;
+        align-items: flex-start;
+        margin-top: 120px;
+      }
+      select {
+        height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 12px;
+        font: inherit;
+        font-size: 13px;
+        color: var(--ink);
+        background: #fff;
+        width: 100%;
+      }
+      .ai-grid {
+        display: grid;
+        gap: 12px;
+      }
+      .span-2 {
+        grid-column: 1 / -1;
+      }
+      .field-hint {
+        display: block;
+        margin-top: 4px;
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 500;
+        line-height: 1.35;
+      }
+      .prompt textarea {
+        height: 72px;
+      }
+      .section-gap {
+        margin-top: 22px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="caption" style="max-width: 560px">
+      <div class="badge">AI optional</div>
+      <h1>Cover letters & open answers, when you need them</h1>
+      <p>
+        Connect your own API key — Gemini, ChatGPT, Claude, Grok, or OpenRouter. Resume text and a
+        custom prompt shape every draft; profile fields still fill without AI.
+      </p>
+    </div>
+    <div class="scene">
+      <div class="options" style="width: 560px; height: 580px; grid-template-columns: 1fr">
+        <div class="main">
+          <h2>AI (optional)</h2>
+          <p class="help">
+            API key for cover letters and “Ответить с AI”. Keys stay in this browser only.
+          </p>
+          <div class="ai-grid">
+            <label class="span-2">
+              Active provider
+              <select>
+                <option selected>Google Gemini</option>
+                <option>ChatGPT (OpenAI)</option>
+                <option>Claude (Anthropic)</option>
+                <option>Grok (xAI)</option>
+                <option>OpenRouter</option>
+              </select>
+            </label>
+            <label class="span-2">
+              Gemini API key
+              <input type="password" value="AIza••••••••••••" style="width: 100%" />
+              <span class="field-hint">Google AI Studio</span>
+            </label>
+            <label class="span-2 prompt">
+              Cover letter prompt
+              <textarea
+                style="width: 100%"
+              >Mention Vue/TypeScript. Keep under 180 words. Start with why this company. End with availability.</textarea>
+              <span class="field-hint"
+                >Used for cover letters and selection-based AI answers.</span
+              >
+            </label>
+          </div>
+
+          <h2 class="section-gap">Import</h2>
+          <p class="help">
+            PDF or DOCX — parses on-device, saves resume text for AI, and auto-attaches on Fill.
+          </p>
+          <div class="file">Choose resume / CV</div>
+          <div class="chip">
+            <div>
+              <strong>yan-hanov.pdf</strong>
+              <span>148 KB · text extracted · ready to attach</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-page" style="width: 420px; margin-top: 8px">
+        <div class="form-head">
+          <h2>Software Engineer — Apply</h2>
+          <p>Acme Corp · Remote</p>
+        </div>
+        <div class="form-body">
+          <div class="field">
+            <label>Full name</label>
+            <input class="filled" value="Yan Hanov" readonly />
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input class="filled" value="yanhanow@gmail.com" readonly />
+          </div>
+          <div class="field">
+            <label>Phone</label>
+            <input class="filled" value="+993 00 000000" readonly />
+          </div>
+          <div class="field">
+            <label>Cover letter</label>
+            <textarea class="filled" readonly>
+I’m excited to apply for the Software Engineer role at Acme. I’ve shipped Vue/TypeScript products end-to-end, improved Core Web Vitals, and led frontend work on an e-commerce platform. Happy to connect this week.</textarea
+            >
+          </div>
+        </div>
       </div>
     </div>
-    <div class="form-page" style="width:420px;margin-top:8px">
-      <div class="form-head"><h2>Software Engineer — Apply</h2><p>Acme Corp · Remote</p></div>
-      <div class="form-body">
-        <div class="field"><label>Full name</label><input class="filled" value="Yan Hanov"></div>
-        <div class="field"><label>Email</label><input class="filled" value="yanhanow@gmail.com"></div>
-        <div class="field"><label>Phone</label><input class="filled" value="+993 00 000000"></div>
-        <div class="field"><label>Cover letter</label><textarea class="filled">I’m excited to apply for the Software Engineer role. I’ve shipped Vue/TypeScript products end-to-end…</textarea></div>
-      </div>
-    </div>
-  </div>
-</body></html>
+  </body>
+</html>

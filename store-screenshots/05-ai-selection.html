@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      body {
+        position: relative;
+        display: block;
+        padding: 40px 48px;
+      }
+      .scene-form {
+        display: flex;
+        justify-content: center;
+        margin-top: 118px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="caption">
+      <div class="badge">Answer with AI</div>
+      <h1>Highlight a question — get an answer</h1>
+      <p>
+        Select any employer question on the page. Apply Filler drafts a reply from your profile,
+        resume, and custom prompt.
+      </p>
+    </div>
+
+    <div class="scene-form">
+      <div class="form-page form-page--ai">
+        <div class="form-head">
+          <h2>Software Engineer — Apply</h2>
+          <p>Acme Corp · Remote</p>
+        </div>
+        <div class="form-body">
+          <div class="field">
+            <label>Full name</label>
+            <input class="filled" value="Yan Hanov" readonly />
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input class="filled" value="yanhanow@gmail.com" readonly />
+          </div>
+          <div class="field field--question">
+            <div class="question-block">
+              <label class="question-label">
+                <span class="selection"
+                  >Why do you want to work at Acme, and what experience is most relevant to this
+                  role?</span
+                >
+              </label>
+              <button class="ai-toolbar" type="button">Ответить с AI</button>
+            </div>
+            <textarea rows="4" placeholder="Type your answer…"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

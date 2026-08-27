@@ -3,10 +3,10 @@
     "en-US": "Apply Filler"
   },
   "summary": {
-    "en-US": "Fill job application forms from your saved profile, attach your CV, and draft cover letters with Gemini."
+    "en-US": "Fill job forms from your profile, attach CV, and draft cover letters with your AI provider (Gemini, OpenAI, Claude, Grok, OpenRouter)."
   },
   "description": {
-    "en-US": "Apply Filler helps you complete job applications faster.\n\n• Matches common form fields from your local profile (name, email, salary prefs, and more)\n• Optionally drafts cover letters and open questions with your free Gemini API key\n• Can auto-attach a resume you imported in Options\n• Never submits forms for you — always review before sending\n\nYour profile stays in browser storage. Vacancy text and open-question labels are sent to Google Gemini only when you set an API key and those fields need answers."
+    "en-US": "Apply Filler helps you complete job applications faster.\n\n• Matches common form fields from your local profile (name, email, salary prefs, and more)\n• Drafts cover letters and open questions with your chosen AI provider and API key\n• Select text on a page → “Answer with AI” for quick replies you can copy or paste into fields\n• Imports PDF/DOCX resumes locally; AI uses extracted resume text plus your custom prompt\n• Supports hh.ru and other ATS-style apply forms\n• Can auto-attach a resume you imported in Options\n• Never submits forms for you — always review before sending\n\nYour profile and API keys stay in browser storage. Vacancy text, resume excerpts, and question labels are sent to your selected AI provider only when you trigger Fill or Answer with AI."
   },
   "categories": {
     "firefox": ["other"],
@@ -14,6 +14,6 @@
   },
   "version": {
     "license": "MIT",
-    "approval_notes": "Uses pdfjs-dist and mammoth only on the Options page to parse resumes locally. Function constructor / dynamic import warnings come from those third-party parsers, not from the content script fill path.\n\nThis submission is for the public (listed) channel. Same add-on ID as the existing unlisted build (apply-filler@local.dev)."
+    "approval_notes": "Uses pdfjs-dist and mammoth only on the Options page to parse resumes locally. Function constructor / dynamic import warnings come from those third-party parsers, not from the content script fill path.\n\nv0.1.6: multi-provider AI (Gemini/OpenAI/Claude/Grok/OpenRouter), selection-based AI answers, resume text in prompts, hh.ru form support, UI improvements.\n\nListed channel submission. Same add-on ID (apply-filler@local.dev)."
   }
 }
