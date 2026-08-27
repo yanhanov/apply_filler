@@ -6,6 +6,7 @@ import { loadProfile, saveProfile } from '../shared/storage'
 import {
   clearStoredCv,
   loadCvMeta,
+  loadCvText,
   loadStoredCv,
   saveStoredCv,
 } from '../shared/cvStorage'
@@ -172,6 +173,7 @@ async function runFill(): Promise<FillResponse> {
   const llmFields = fields.filter((f) => f.needsLlm)
   const hasApiKey = hasAiConfigured(profile)
   const aiLabel = providerMeta(profile.aiProvider).label
+  const resumeText = await loadCvText()
 
   let coverLetter = profile.bio.trim()
   let llmAnswers: FieldAnswer[] = []
@@ -187,6 +189,7 @@ async function runFill(): Promise<FillResponse> {
         profile,
         vacancy,
         fields: llmFields.length > 0 ? llmFields : [],
+        resumeText,
       })
       usedLlm = true
       llmAnswers = llm.answers
@@ -409,10 +412,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             error: 'Fill your profile in Options first.',
           } satisfies AiAnswerResponse
         }
+        const resumeText = await loadCvText()
         const answer = await generateSelectionAnswer({
           profile,
           vacancy,
           question,
+          resumeText,
         })
         return { ok: true, answer } satisfies AiAnswerResponse
       })

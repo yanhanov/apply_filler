@@ -38,3 +38,17 @@ export function buildProfileTextBlock(profile: CandidateProfile): string {
     `Cover letter tone: ${profile.coverLetterTone}`,
   ].join('\n')
 }
+
+export function buildResumeTextBlock(resumeText: string): string {
+  const text = resumeText.trim()
+  if (!text) return ''
+  return `IMPORTED RESUME / CV (primary source for employers, roles, skills, dates, projects):
+${text}`
+}
+
+export function buildUserPromptBlock(profile: CandidateProfile): string {
+  const custom = profile.coverLetterPrompt.trim()
+  if (!custom) return ''
+  return `USER INSTRUCTIONS (follow closely; override default tone/length when they conflict):
+${custom}`
+}

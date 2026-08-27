@@ -39,6 +39,7 @@ import {
   formatCvSize,
   loadCvMeta,
   saveStoredCv,
+  trimCvText,
 } from '../shared/cvStorage'
 import type { CvFileMeta } from '../shared/cvTypes'
 
@@ -600,7 +601,9 @@ resumeInput.addEventListener('change', async () => {
   const current = readForm()
   setImportStatus(`Reading ${file.name}…`)
   try {
+    const resumeText = await extractTextFromFile(file)
     const storedCv = await fileToStoredCv(file)
+    storedCv.extractedText = trimCvText(resumeText)
     await saveStoredCv(storedCv)
     renderCvChip({
       name: storedCv.name,
@@ -609,7 +612,6 @@ resumeInput.addEventListener('change', async () => {
       updatedAt: storedCv.updatedAt,
     })
 
-    const resumeText = await extractTextFromFile(file)
     const parsed = parseResumeLocally(resumeText)
 
     const stringEntries = Object.fromEntries(

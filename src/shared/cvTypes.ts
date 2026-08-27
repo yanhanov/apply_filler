@@ -5,6 +5,8 @@ export interface StoredCvFile {
   dataBase64: string
   size: number
   updatedAt: number
+  /** Plain text extracted on import — used by AI prompts */
+  extractedText?: string
 }
 
 export interface CvFileMeta {

@@ -2,6 +2,7 @@ import type { CvFileMeta, StoredCvFile } from './cvTypes'
 
 const CV_KEY = 'applyFillerCv'
 const MAX_CV_BYTES = 4.5 * 1024 * 1024
+const MAX_CV_TEXT_CHARS = 14_000
 
 export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)
@@ -70,6 +71,17 @@ export async function loadCvMeta(): Promise<CvFileMeta | null> {
     size: cv.size,
     updatedAt: cv.updatedAt,
   }
+}
+
+export async function loadCvText(): Promise<string> {
+  const cv = await loadStoredCv()
+  const text = cv?.extractedText?.trim() ?? ''
+  if (!text) return ''
+  return text.slice(0, MAX_CV_TEXT_CHARS)
+}
+
+export function trimCvText(text: string): string {
+  return text.trim().slice(0, MAX_CV_TEXT_CHARS)
 }
 
 export function formatCvSize(bytes: number): string {

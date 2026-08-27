@@ -174,11 +174,12 @@ export async function generateFill(params: {
   profile: CandidateProfile
   vacancy: VacancyInfo
   fields: ScannedField[]
+  resumeText?: string
 }): Promise<LlmFillResult> {
-  const { profile, vacancy, fields } = params
+  const { profile, vacancy, fields, resumeText = '' } = params
   const { provider, apiKey } = requireConfigured(profile)
   const allowedIds = new Set(fields.map((f) => f.id))
-  const prompt = buildFillPrompt({ profile, vacancy, fields })
+  const prompt = buildFillPrompt({ profile, vacancy, fields, resumeText })
   const text = await completeText({
     provider,
     apiKey,
@@ -194,13 +195,14 @@ export async function generateSelectionAnswer(params: {
   profile: CandidateProfile
   vacancy: VacancyInfo
   question: string
+  resumeText?: string
 }): Promise<string> {
-  const { profile, vacancy, question } = params
+  const { profile, vacancy, question, resumeText = '' } = params
   if (!question.trim()) {
     throw new Error('Select question text on the page first.')
   }
   const { provider, apiKey } = requireConfigured(profile)
-  const prompt = buildSelectionAnswerPrompt({ profile, vacancy, question })
+  const prompt = buildSelectionAnswerPrompt({ profile, vacancy, question, resumeText })
   const text = await completeText({
     provider,
     apiKey,
