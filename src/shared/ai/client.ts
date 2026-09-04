@@ -207,7 +207,7 @@ export async function generateSelectionAnswer(params: {
     provider,
     apiKey,
     prompt,
-    maxTokens: 1024,
+    maxTokens: 2048,
     profile,
   })
   return text.replace(/^["']|["']$/g, '')

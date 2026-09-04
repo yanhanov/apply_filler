@@ -4,7 +4,7 @@ import { fillControlElement, findFillTargetNearSelection, markFillTarget } from 
 import { parseVacancy } from './vacancyParser'
 
 const ROOT_ID = 'apply-filler-ai-root'
-const MIN_SELECTION = 12
+const MIN_SELECTION = 2
 const MAX_SELECTION = 4000
 
 type UiState = 'idle' | 'loading' | 'result' | 'error'
@@ -139,7 +139,7 @@ function styles(): string {
       display: none;
       flex-direction: column;
       width: min(360px, calc(100vw - 24px));
-      max-height: min(420px, calc(100vh - 24px));
+      max-height: min(520px, calc(100vh - 24px));
       border: 1px solid #d5dae3;
       border-radius: 12px;
       background: #fff;
@@ -176,11 +176,13 @@ function styles(): string {
       margin: 0;
       padding: 0 14px 8px;
       font-size: 11.5px;
-      line-height: 1.4;
+      line-height: 1.45;
       color: #5b6575;
       font-weight: 500;
-      max-height: 48px;
-      overflow: hidden;
+      max-height: 96px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     .answer {
       margin: 0;
@@ -188,10 +190,11 @@ function styles(): string {
       font-size: 13px;
       line-height: 1.5;
       white-space: pre-wrap;
+      word-break: break-word;
       overflow: auto;
       flex: 1;
       min-height: 80px;
-      max-height: 220px;
+      max-height: min(320px, calc(100vh - 220px));
     }
     .status {
       margin: 0;
@@ -332,11 +335,6 @@ function hidePanel(): void {
   }
 }
 
-function truncate(text: string, max: number): string {
-  if (text.length <= max) return text
-  return `${text.slice(0, max - 1)}…`
-}
-
 function renderPanel(state: UiState, anchorRect: DOMRect): void {
   if (!panelEl) return
   positionPanel(anchorRect)
@@ -371,7 +369,7 @@ function renderPanel(state: UiState, anchorRect: DOMRect): void {
       <p class="panel-title">Ответ AI</p>
       <button type="button" class="close" data-action="close" aria-label="Закрыть">×</button>
     </div>
-    <p class="question">${escapeHtml(truncate(currentQuestion, 180))}</p>
+    <p class="question">${escapeHtml(currentQuestion)}</p>
     <p class="answer">${escapeHtml(currentAnswer)}</p>
     <div class="actions">
       <button type="button" class="btn btn-secondary" data-action="copy">Копировать</button>

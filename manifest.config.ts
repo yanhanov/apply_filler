@@ -5,7 +5,7 @@ export default defineManifest({
   name: "Apply Filler",
   description:
     "Fill job applications from your profile; AI drafts cover letters and answers (Gemini, OpenAI, Claude, Grok, OpenRouter).",
-  version: "0.1.6",
+  version: "0.1.7",
   // Required for Firefox (temporary + permanent installs)
   browser_specific_settings: {
     gecko: {
