@@ -1,5 +1,5 @@
 import { runtimeSendMessage } from '../shared/messaging'
-import type { FillResponse } from '../shared/types'
+import type { FillResponse, FillStatusResponse } from '../shared/types'
 
 const fillBtn = document.getElementById('fill-btn') as HTMLButtonElement
 const statusEl = document.getElementById('status') as HTMLParagraphElement
@@ -12,6 +12,13 @@ function setStatus(text: string, kind: 'ok' | 'error' | '' = '') {
   resultEl.hidden = !text
   resultEl.classList.toggle('is-ok', kind === 'ok')
   resultEl.classList.toggle('is-error', kind === 'error')
+}
+
+function setBusy(busy: boolean) {
+  fillBtn.disabled = busy
+  fillBtn.classList.toggle('is-busy', busy)
+  if (busy) fillBtn.setAttribute('aria-busy', 'true')
+  else fillBtn.removeAttribute('aria-busy')
 }
 
 function showDebug(result: FillResponse | undefined | null) {
@@ -41,58 +48,82 @@ function showDebug(result: FillResponse | undefined | null) {
   debugEl.hidden = false
 }
 
+function applyFillResult(result: FillResponse | undefined | null) {
+  if (!result) {
+    setStatus(
+      'No response from background. Reload the add-on, refresh the page, try again.',
+      'error',
+    )
+    return
+  }
+
+  showDebug(result)
+
+  if (!result.ok) {
+    setStatus(result.error || 'Fill failed.', 'error')
+    return
+  }
+
+  const parts = [
+    `Filled ${result.debug?.filled ?? result.answers.length} of ${result.debug?.scanned ?? '?'} fields`,
+  ]
+  if (result.debug?.usedLlm) parts.push('AI used')
+  if (result.cvAttached || (result.debug?.filesFilled ?? 0) > 0) {
+    parts.push('CV attached')
+  } else if (result.fileUploadHint) {
+    parts.push('attach CV manually if needed')
+  }
+
+  const unmatchedSalary = result.debug?.unmatched?.some((u) => u.intent === 'salary')
+  if (unmatchedSalary) {
+    parts.push('set Salary in Profile to fill salary field')
+  }
+
+  if (result.warning) parts.push(result.warning)
+
+  setStatus(`${parts.join(' · ')}.`, 'ok')
+}
+
+async function runFillFlow(showLoadingMessage = true) {
+  if (showLoadingMessage) {
+    debugEl.hidden = true
+    setStatus('Scanning page & generating answers…')
+  }
+  setBusy(true)
+  try {
+    const result = await runtimeSendMessage<FillResponse>({ type: 'RUN_FILL' })
+    applyFillResult(result)
+  } catch (err) {
+    setStatus(err instanceof Error ? err.message : 'Unexpected error', 'error')
+  } finally {
+    setBusy(false)
+  }
+}
+
+async function restoreFillState() {
+  try {
+    const state = await runtimeSendMessage<FillStatusResponse>({ type: 'GET_FILL_STATUS' })
+    if (state.status === 'running') {
+      setStatus('Scanning page & generating answers…')
+      await runFillFlow(false)
+      return
+    }
+    if (state.status === 'done' && state.result) {
+      applyFillResult(state.result)
+    }
+  } catch {
+    // Popup works without restore if background is unavailable.
+  }
+}
+
 openOptions.addEventListener('click', (e) => {
   e.preventDefault()
   chrome.runtime.openOptionsPage()
 })
 
-fillBtn.addEventListener('click', async () => {
-  fillBtn.disabled = true
-  fillBtn.classList.add('is-busy')
-  fillBtn.setAttribute('aria-busy', 'true')
-  debugEl.hidden = true
-  setStatus('Scanning page & generating answers…')
-  try {
-    const result = await runtimeSendMessage<FillResponse>({ type: 'RUN_FILL' })
-
-    if (!result) {
-      setStatus(
-        'No response from background. Reload the add-on, refresh the page, try again.',
-        'error',
-      )
-      return
-    }
-
-    showDebug(result)
-
-    if (!result.ok) {
-      setStatus(result.error || 'Fill failed.', 'error')
-      return
-    }
-
-    const parts = [
-      `Filled ${result.debug?.filled ?? result.answers.length} of ${result.debug?.scanned ?? '?'} fields`,
-    ]
-    if (result.debug?.usedLlm) parts.push('AI used')
-    if (result.cvAttached || (result.debug?.filesFilled ?? 0) > 0) {
-      parts.push('CV attached')
-    } else if (result.fileUploadHint) {
-      parts.push('attach CV manually if needed')
-    }
-
-    const unmatchedSalary = result.debug?.unmatched?.some((u) => u.intent === 'salary')
-    if (unmatchedSalary) {
-      parts.push('set Salary in Profile to fill salary field')
-    }
-
-    if (result.warning) parts.push(result.warning)
-
-    setStatus(`${parts.join(' · ')}.`, 'ok')
-  } catch (err) {
-    setStatus(err instanceof Error ? err.message : 'Unexpected error', 'error')
-  } finally {
-    fillBtn.disabled = false
-    fillBtn.classList.remove('is-busy')
-    fillBtn.removeAttribute('aria-busy')
-  }
+fillBtn.addEventListener('click', () => {
+  if (fillBtn.disabled) return
+  void runFillFlow()
 })
+
+void restoreFillState()

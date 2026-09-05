@@ -1,3 +1,5 @@
+import { runAiAnswerJob } from './aiAnswerSession'
+import { getFillSession, runFillJob } from './fillSession'
 import { mapFieldsWithProfile } from '../shared/fieldMapper'
 import { generateFill, generateSelectionAnswer, hasAiConfigured } from '../shared/ai/client'
 import { providerMeta } from '../shared/ai/providers'
@@ -380,8 +382,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true
   }
 
+  if (message.type === 'GET_FILL_STATUS') {
+    const { status, startedAt, result } = getFillSession()
+    sendResponse({
+      status,
+      startedAt,
+      ...(result ? { result } : {}),
+    })
+    return false
+  }
+
   if (message.type === 'RUN_FILL') {
-    runFill()
+    runFillJob(runFill)
       .then((result) => sendResponse(result))
       .catch((err) =>
         sendResponse({
@@ -398,29 +410,37 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'RUN_AI_ANSWER') {
     const question = String(message.question ?? '')
     const vacancy = message.vacancy as VacancyInfo
-    loadProfile()
-      .then(async (profile) => {
-        if (!hasAiConfigured(profile)) {
-          return {
-            ok: false,
-            error: `Add a ${providerMeta(profile.aiProvider).label} API key in Options → AI.`,
-          } satisfies AiAnswerResponse
-        }
-        if (!profile.fullName.trim() && !profile.email.trim() && !profile.bio.trim()) {
-          return {
-            ok: false,
-            error: 'Fill your profile in Options first.',
-          } satisfies AiAnswerResponse
-        }
-        const resumeText = await loadCvText()
-        const answer = await generateSelectionAnswer({
-          profile,
-          vacancy,
-          question,
-          resumeText,
+    runAiAnswerJob(question, () =>
+      loadProfile()
+        .then(async (profile) => {
+          if (!hasAiConfigured(profile)) {
+            return {
+              ok: false,
+              error: `Add a ${providerMeta(profile.aiProvider).label} API key in Options → AI.`,
+            } satisfies AiAnswerResponse
+          }
+          if (!profile.fullName.trim() && !profile.email.trim() && !profile.bio.trim()) {
+            return {
+              ok: false,
+              error: 'Fill your profile in Options first.',
+            } satisfies AiAnswerResponse
+          }
+          const resumeText = await loadCvText()
+          const answer = await generateSelectionAnswer({
+            profile,
+            vacancy,
+            question,
+            resumeText,
+          })
+          return { ok: true, answer } satisfies AiAnswerResponse
         })
-        return { ok: true, answer } satisfies AiAnswerResponse
-      })
+        .catch(
+          (err): AiAnswerResponse => ({
+            ok: false,
+            error: err instanceof Error ? err.message : 'Unexpected error',
+          }),
+        ),
+    )
       .then((result) => sendResponse(result))
       .catch((err) =>
         sendResponse({

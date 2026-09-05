@@ -239,7 +239,14 @@ export type MessageType =
   | { type: 'SAVE_CV'; cv: import('./cvTypes').StoredCvFile }
   | { type: 'CLEAR_CV' }
   | { type: 'RUN_FILL' }
+  | { type: 'GET_FILL_STATUS' }
   | { type: 'RUN_AI_ANSWER'; question: string; vacancy: VacancyInfo }
+
+export type FillStatusResponse = {
+  status: 'idle' | 'running' | 'done'
+  startedAt: number
+  result?: FillResponse
+}
 
 export type AiAnswerResponse = {
   ok: boolean

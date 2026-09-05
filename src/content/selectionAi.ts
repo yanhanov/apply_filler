@@ -17,6 +17,7 @@ let hideTimer: ReturnType<typeof setTimeout> | null = null
 let currentQuestion = ''
 let currentAnswer = ''
 let currentTarget: HTMLElement | null = null
+let answerRun: Promise<void> | null = null
 
 function isExtensionPage(): boolean {
   return /^(chrome-extension|moz-extension|about):/i.test(location.protocol)
@@ -422,6 +423,12 @@ async function runAiAnswer(): Promise<void> {
   const info = getSelectionInfo()
   if (!info) return
 
+  if (answerRun && currentQuestion === info.text) {
+    renderPanel('loading', info.rect)
+    await answerRun
+    return
+  }
+
   currentQuestion = info.text
   currentTarget = findFillTargetNearSelection({
     anchorNode: info.anchorNode,
@@ -437,30 +444,38 @@ async function runAiAnswer(): Promise<void> {
     toolbarEl.classList.add('is-busy')
   }
 
-  try {
-    const vacancy: VacancyInfo = parseVacancy()
-    const res = await runtimeSendMessage<AiAnswerResponse>({
-      type: 'RUN_AI_ANSWER',
-      question: currentQuestion,
-      vacancy,
-    })
+  answerRun = (async () => {
+    try {
+      const vacancy: VacancyInfo = parseVacancy()
+      const res = await runtimeSendMessage<AiAnswerResponse>({
+        type: 'RUN_AI_ANSWER',
+        question: currentQuestion,
+        vacancy,
+      })
 
-    if (!res?.ok || !res.answer) {
-      currentAnswer = res?.error || 'Не удалось сгенерировать ответ.'
+      if (!res?.ok || !res.answer) {
+        currentAnswer = res?.error || 'Не удалось сгенерировать ответ.'
+        renderPanel('error', info.rect)
+        return
+      }
+
+      currentAnswer = res.answer
+      renderPanel('result', info.rect)
+    } catch (err) {
+      currentAnswer = err instanceof Error ? err.message : 'Unexpected error'
       renderPanel('error', info.rect)
-      return
+    } finally {
+      if (toolbarEl) {
+        toolbarEl.disabled = false
+        toolbarEl.classList.remove('is-busy')
+      }
     }
+  })()
 
-    currentAnswer = res.answer
-    renderPanel('result', info.rect)
-  } catch (err) {
-    currentAnswer = err instanceof Error ? err.message : 'Unexpected error'
-    renderPanel('error', info.rect)
+  try {
+    await answerRun
   } finally {
-    if (toolbarEl) {
-      toolbarEl.disabled = false
-      toolbarEl.classList.remove('is-busy')
-    }
+    answerRun = null
   }
 }
 
