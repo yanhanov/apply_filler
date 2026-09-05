@@ -14,6 +14,7 @@ export interface CvFileMeta {
   mimeType: string
   size: number
   updatedAt: number
+  hasExtractedText?: boolean
 }
 
 export type FileUploadKind = 'resume' | 'cover_letter' | 'unknown'

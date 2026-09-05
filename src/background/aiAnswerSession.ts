@@ -8,13 +8,15 @@ function normalizeQuestion(question: string): string {
 
 export function runAiAnswerJob(
   question: string,
+  vacancyPageUrl: string,
   task: () => Promise<AiAnswerResponse>,
 ): Promise<AiAnswerResponse> {
-  const key = normalizeQuestion(question)
-  if (!key) {
+  const q = normalizeQuestion(question)
+  if (!q) {
     return Promise.resolve({ ok: false, error: 'Select question text on the page first.' })
   }
 
+  const key = `${q}::${vacancyPageUrl.trim()}`
   const existing = active.get(key)
   if (existing) return existing
 

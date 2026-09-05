@@ -34,6 +34,11 @@ import {
 } from '../shared/preferenceValues'
 import { extractTextFromFile } from './resumeImport'
 import {
+  loadCvPreview,
+  revokeCvPreview,
+  type CvPreview,
+} from './cvPreview'
+import {
   clearStoredCv,
   fileToStoredCv,
   formatCvSize,
@@ -51,6 +56,15 @@ const cvChip = document.getElementById('cv-chip') as HTMLDivElement
 const cvName = document.getElementById('cv-name') as HTMLElement
 const cvMeta = document.getElementById('cv-meta') as HTMLElement
 const clearCvBtn = document.getElementById('clear-cv') as HTMLButtonElement
+const viewCvBtn = document.getElementById('view-cv') as HTMLButtonElement
+const cvViewer = document.getElementById('cv-viewer') as HTMLDialogElement
+const cvViewerTitle = document.getElementById('cv-viewer-title') as HTMLHeadingElement
+const cvViewerClose = document.getElementById('cv-viewer-close') as HTMLButtonElement
+const cvViewerFrame = document.getElementById('cv-viewer-frame') as HTMLIFrameElement
+const cvViewerHtml = document.getElementById('cv-viewer-html') as HTMLDivElement
+const cvViewerText = document.getElementById('cv-viewer-text') as HTMLPreElement
+
+let activeCvPreview: CvPreview | null = null
 
 const skillsTags = document.getElementById('skills-tags') as HTMLDivElement
 const skillsInput = document.getElementById('skills-input') as HTMLInputElement
@@ -523,7 +537,41 @@ function renderCvChip(meta: CvFileMeta | null) {
   }
   cvChip.hidden = false
   cvName.textContent = meta.name
-  cvMeta.textContent = `${formatCvSize(meta.size)} · ready to auto-attach`
+  const parts = [formatCvSize(meta.size), 'ready to auto-attach']
+  if (meta.hasExtractedText) parts.splice(1, 0, 'text extracted')
+  cvMeta.textContent = parts.join(' · ')
+}
+
+function resetCvViewerPanels() {
+  cvViewerFrame.hidden = true
+  cvViewerFrame.removeAttribute('src')
+  cvViewerHtml.hidden = true
+  cvViewerHtml.innerHTML = ''
+  cvViewerText.hidden = true
+  cvViewerText.textContent = ''
+}
+
+function closeCvViewer() {
+  revokeCvPreview(activeCvPreview)
+  activeCvPreview = null
+  resetCvViewerPanels()
+  cvViewer.close()
+}
+
+function showCvPreview(cvName: string, preview: CvPreview) {
+  resetCvViewerPanels()
+  cvViewerTitle.textContent = cvName
+
+  if (preview.kind === 'pdf') {
+    cvViewerFrame.hidden = false
+    cvViewerFrame.src = preview.objectUrl
+  } else if (preview.kind === 'html') {
+    cvViewerHtml.hidden = false
+    cvViewerHtml.innerHTML = preview.html
+  } else {
+    cvViewerText.hidden = false
+    cvViewerText.textContent = preview.text
+  }
 }
 
 async function loadCvChip() {
@@ -656,6 +704,33 @@ clearCvBtn.addEventListener('click', async () => {
   await clearStoredCv()
   renderCvChip(null)
   setImportStatus('CV removed. Import again to auto-attach on Fill.')
+})
+
+viewCvBtn.addEventListener('click', async () => {
+  viewCvBtn.disabled = true
+  try {
+    revokeCvPreview(activeCvPreview)
+    activeCvPreview = null
+    const { cv, preview } = await loadCvPreview()
+    activeCvPreview = preview
+    showCvPreview(cv.name, preview)
+    cvViewer.showModal()
+  } catch (err) {
+    setImportStatus(err instanceof Error ? err.message : 'Could not open resume', true)
+  } finally {
+    viewCvBtn.disabled = false
+  }
+})
+
+cvViewerClose.addEventListener('click', () => closeCvViewer())
+
+cvViewer.addEventListener('cancel', (e) => {
+  e.preventDefault()
+  closeCvViewer()
+})
+
+cvViewer.addEventListener('click', (e) => {
+  if (e.target === cvViewer) closeCvViewer()
 })
 
 function setupSectionNav() {

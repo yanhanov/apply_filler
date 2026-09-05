@@ -477,6 +477,101 @@ select:focus {
   background: var(--ok-bg);
 }
 
+.cv-chip-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.cv-viewer {
+  width: min(920px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(11, 18, 32, 0.2);
+}
+
+.cv-viewer::backdrop {
+  background: rgba(11, 18, 32, 0.45);
+}
+
+.cv-viewer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cv-viewer-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cv-viewer-close {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
+.cv-viewer-close:hover {
+  background: #f5f6f8;
+  color: var(--ink);
+}
+
+.cv-viewer-body {
+  height: min(72vh, 720px);
+  overflow: auto;
+  background: #fafbfd;
+}
+
+.cv-viewer-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: min(72vh, 720px);
+  border: 0;
+  background: #fff;
+}
+
+.cv-viewer-doc {
+  padding: 20px 24px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: #fff;
+}
+
+.cv-viewer-doc :where(p, ul, ol) {
+  margin: 0 0 0.75rem;
+}
+
+.cv-viewer-text {
+  margin: 0;
+  padding: 20px 24px;
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--ink);
+  background: #fff;
+}
+
 .cv-chip-text {
   display: flex;
   flex-direction: column;

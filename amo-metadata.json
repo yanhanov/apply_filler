@@ -14,6 +14,6 @@
   },
   "version": {
     "license": "MIT",
-    "approval_notes": "Uses pdfjs-dist and mammoth only on the Options page to parse resumes locally. Function constructor / dynamic import warnings come from those third-party parsers, not from the content script fill path.\n\nv0.1.7: Answer with AI — minimum selection lowered to 2 chars, full question/answer shown in panel with scroll, higher token limit for longer replies.\n\nListed channel submission. Same add-on ID (apply-filler@local.dev)."
+    "approval_notes": "Uses pdfjs-dist and mammoth only on the Options page to parse resumes locally. Function constructor / dynamic import warnings come from those third-party parsers, not from the content script fill path.\n\nv0.1.8: view imported resume in Options (PDF/DOCX preview), popup preserves Fill loading state across tab switches, race-condition fixes for AI requests, Answer with AI display improvements.\n\nListed channel submission. Same add-on ID (apply-filler@local.dev)."
   }
 }

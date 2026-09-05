@@ -410,7 +410,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'RUN_AI_ANSWER') {
     const question = String(message.question ?? '')
     const vacancy = message.vacancy as VacancyInfo
-    runAiAnswerJob(question, () =>
+    runAiAnswerJob(question, vacancy.pageUrl ?? '', () =>
       loadProfile()
         .then(async (profile) => {
           if (!hasAiConfigured(profile)) {

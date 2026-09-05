@@ -70,6 +70,7 @@ export async function loadCvMeta(): Promise<CvFileMeta | null> {
     mimeType: cv.mimeType,
     size: cv.size,
     updatedAt: cv.updatedAt,
+    hasExtractedText: Boolean(cv.extractedText?.trim()),
   }
 }
 
@@ -82,6 +83,15 @@ export async function loadCvText(): Promise<string> {
 
 export function trimCvText(text: string): string {
   return text.trim().slice(0, MAX_CV_TEXT_CHARS)
+}
+
+export function storedCvToBlob(cv: StoredCvFile): Blob {
+  const bytes = base64ToUint8Array(cv.dataBase64)
+  return new Blob([bytes as unknown as BlobPart], { type: cv.mimeType })
+}
+
+export function storedCvToObjectUrl(cv: StoredCvFile): string {
+  return URL.createObjectURL(storedCvToBlob(cv))
 }
 
 export function formatCvSize(bytes: number): string {

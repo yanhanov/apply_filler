@@ -125,8 +125,24 @@
               <strong id="cv-name">—</strong>
               <span id="cv-meta" class="cv-meta"></span>
             </div>
-            <button type="button" class="ghost" id="clear-cv">Remove CV</button>
+            <div class="cv-chip-actions">
+              <button type="button" class="ghost" id="view-cv">View resume</button>
+              <button type="button" class="ghost" id="clear-cv">Remove CV</button>
+            </div>
           </div>
+          <dialog id="cv-viewer" class="cv-viewer" aria-labelledby="cv-viewer-title">
+            <div class="cv-viewer-head">
+              <h3 id="cv-viewer-title">Resume</h3>
+              <button type="button" class="cv-viewer-close" id="cv-viewer-close" aria-label="Close">
+                ×
+              </button>
+            </div>
+            <div class="cv-viewer-body">
+              <iframe id="cv-viewer-frame" class="cv-viewer-frame" hidden title="Resume preview"></iframe>
+              <div id="cv-viewer-html" class="cv-viewer-doc" hidden></div>
+              <pre id="cv-viewer-text" class="cv-viewer-text" hidden></pre>
+            </div>
+          </dialog>
           <p id="import-status" class="status" role="status"></p>
         </section>
 

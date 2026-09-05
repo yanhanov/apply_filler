@@ -429,15 +429,18 @@ async function runAiAnswer(): Promise<void> {
     return
   }
 
-  currentQuestion = info.text
+  if (answerRun) return
+  const questionForRun = info.text
+  const rectForRun = info.rect
+  currentQuestion = questionForRun
   currentTarget = findFillTargetNearSelection({
     anchorNode: info.anchorNode,
     focusNode: info.focusNode,
-    selectionRect: info.rect,
+    selectionRect: rectForRun,
   })
 
   hideToolbar()
-  renderPanel('loading', info.rect)
+  renderPanel('loading', rectForRun)
 
   if (toolbarEl) {
     toolbarEl.disabled = true
@@ -449,21 +452,24 @@ async function runAiAnswer(): Promise<void> {
       const vacancy: VacancyInfo = parseVacancy()
       const res = await runtimeSendMessage<AiAnswerResponse>({
         type: 'RUN_AI_ANSWER',
-        question: currentQuestion,
+        question: questionForRun,
         vacancy,
       })
 
+      if (currentQuestion !== questionForRun) return
+
       if (!res?.ok || !res.answer) {
         currentAnswer = res?.error || 'Не удалось сгенерировать ответ.'
-        renderPanel('error', info.rect)
+        renderPanel('error', rectForRun)
         return
       }
 
       currentAnswer = res.answer
-      renderPanel('result', info.rect)
+      renderPanel('result', rectForRun)
     } catch (err) {
+      if (currentQuestion !== questionForRun) return
       currentAnswer = err instanceof Error ? err.message : 'Unexpected error'
-      renderPanel('error', info.rect)
+      renderPanel('error', rectForRun)
     } finally {
       if (toolbarEl) {
         toolbarEl.disabled = false

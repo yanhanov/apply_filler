@@ -12,6 +12,10 @@ let session: FillSession = { status: 'idle', startedAt: 0, result: null }
 let active: Promise<FillResponse> | null = null
 
 export function getFillSession(): FillSession {
+  // Service worker restarted while a job was marked running — treat as interrupted.
+  if (session.status === 'running' && !active) {
+    session = { status: 'idle', startedAt: 0, result: null }
+  }
   return session
 }
 

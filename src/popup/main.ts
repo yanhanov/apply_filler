@@ -6,6 +6,7 @@ const statusEl = document.getElementById('status') as HTMLParagraphElement
 const debugEl = document.getElementById('debug') as HTMLPreElement
 const resultEl = document.getElementById('result') as HTMLDivElement
 const openOptions = document.getElementById('open-options') as HTMLAnchorElement
+let fillFlowActive = false
 
 function setStatus(text: string, kind: 'ok' | 'error' | '' = '') {
   statusEl.textContent = text
@@ -85,6 +86,8 @@ function applyFillResult(result: FillResponse | undefined | null) {
 }
 
 async function runFillFlow(showLoadingMessage = true) {
+  if (fillFlowActive) return
+  fillFlowActive = true
   if (showLoadingMessage) {
     debugEl.hidden = true
     setStatus('Scanning page & generating answers…')
@@ -97,6 +100,32 @@ async function runFillFlow(showLoadingMessage = true) {
     setStatus(err instanceof Error ? err.message : 'Unexpected error', 'error')
   } finally {
     setBusy(false)
+    fillFlowActive = false
+  }
+}
+
+async function waitForFillCompletion() {
+  fillFlowActive = true
+  setStatus('Scanning page & generating answers…')
+  setBusy(true)
+  try {
+    for (;;) {
+      const state = await runtimeSendMessage<FillStatusResponse>({ type: 'GET_FILL_STATUS' })
+      if (state.status === 'done' && state.result) {
+        applyFillResult(state.result)
+        return
+      }
+      if (state.status === 'idle') {
+        setStatus('Fill was interrupted. Click Fill again.', 'error')
+        return
+      }
+      await new Promise((resolve) => setTimeout(resolve, 400))
+    }
+  } catch (err) {
+    setStatus(err instanceof Error ? err.message : 'Unexpected error', 'error')
+  } finally {
+    setBusy(false)
+    fillFlowActive = false
   }
 }
 
@@ -104,8 +133,7 @@ async function restoreFillState() {
   try {
     const state = await runtimeSendMessage<FillStatusResponse>({ type: 'GET_FILL_STATUS' })
     if (state.status === 'running') {
-      setStatus('Scanning page & generating answers…')
-      await runFillFlow(false)
+      await waitForFillCompletion()
       return
     }
     if (state.status === 'done' && state.result) {
@@ -122,7 +150,7 @@ openOptions.addEventListener('click', (e) => {
 })
 
 fillBtn.addEventListener('click', () => {
-  if (fillBtn.disabled) return
+  if (fillBtn.disabled || fillFlowActive) return
   void runFillFlow()
 })
 
